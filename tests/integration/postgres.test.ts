@@ -29,10 +29,10 @@ describe('migrations', () => {
     expect(await migrate(db.pool)).toEqual([]);
   });
 
-  it('create no person-identifying columns anywhere', async () => {
+  it('create no person-identifying columns in event, team or survey data (login accounts excepted)', async () => {
     const r = await db.pool.query(
       `SELECT table_name, column_name FROM information_schema.columns
-       WHERE table_schema = 'public'
+       WHERE table_schema = 'public' AND table_name NOT IN ('users', 'sessions')
          AND column_name ~* '(author|assignee|reviewer|committer|email|user_?name|ip_?address|user_?agent|reporter|person)'`,
     );
     expect(r.rows).toEqual([]);

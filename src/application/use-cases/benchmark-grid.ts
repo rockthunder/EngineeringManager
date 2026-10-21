@@ -1,12 +1,13 @@
 import { gradeMetric, type Grade } from '../../domain/benchmarks/grading';
 import { trendOf, type Trend } from '../../domain/benchmarks/trend';
-import { versionInForce, type BenchmarkVersion } from '../../domain/benchmarks/version';
+import { barFor, thresholdsFor, versionInForce, type BenchmarkVersion } from '../../domain/benchmarks/version';
+import type { Level } from '../../domain/benchmarks/levels';
 import type { SourceDefinitions } from '../../domain/events/definitions';
 import { EMPTY_EVENTS, type EventSet } from '../../domain/events/types';
 import { finalize, pool, valueForGrading } from '../../domain/metrics/aggregation';
 import { buildIndex, contextFor } from '../../domain/metrics/context';
 import { REGISTRY } from '../../domain/metrics/registry';
-import type { Measurement, MetricId } from '../../domain/metrics/types';
+import type { Measurement, MetricGroup, MetricId, Thresholds } from '../../domain/metrics/types';
 import { attributeEvents } from '../../domain/teams/attribution';
 import { coverageDays } from '../../domain/teams/mapping';
 import type { Organisation } from '../../domain/teams/organisation';
@@ -24,6 +25,9 @@ export interface GridCell {
   readonly gradedValue: number | null;
   readonly sampleSize: number;
   readonly grade: Grade;
+  /** Thresholds and bar this cell was graded against (for explaining the grade). */
+  readonly thresholds: Thresholds | null;
+  readonly bar: Level;
   /** Against the previous period of the same length; null if comparison wasn't requested. */
   readonly trend: Trend | null;
 }
@@ -40,7 +44,7 @@ export interface BenchmarkGrid {
   readonly endDay: Day;
   readonly benchmarkVersion: number;
   readonly benchmarkEffectiveFrom: Day;
-  readonly metrics: readonly { id: MetricId; name: string; unitLabel: string; windowDays: number; graded: boolean }[];
+  readonly metrics: readonly { id: MetricId; name: string; unitLabel: string; windowDays: number; graded: boolean; group: MetricGroup }[];
   /** Sorted by team name only: never by grade or score. */
   readonly rows: readonly GridRow[];
   readonly org: { readonly cells: readonly GridCell[] };
@@ -101,6 +105,8 @@ export function computeBenchmarkGrid(input: GridInput, req: GridRequest = {}): B
         gradedValue,
         sampleSize: m.sampleSize,
         grade: gradeMetric(def, gradedValue, m.sampleSize, version, profile),
+        thresholds: thresholdsFor(version, profile, def.id),
+        bar: barFor(version, profile, def.id),
         trend: o
           ? trendOf(def, { value: gradedValue, sampleSize: m.sampleSize }, { value: valueForGrading(agg, o), sampleSize: o.sampleSize })
           : null,
@@ -111,7 +117,7 @@ export function computeBenchmarkGrid(input: GridInput, req: GridRequest = {}): B
     orgCells.push(
       cell(pool(def.minSample.noun, cur), compare ? pool(def.minSample.noun, old) : undefined, 'product', true),
     );
-    return { id: def.id, name: def.name, unitLabel: def.unitLabel, windowDays, graded: def.graded };
+    return { id: def.id, name: def.name, unitLabel: def.unitLabel, windowDays, graded: def.graded, group: def.group };
   });
 
   return {

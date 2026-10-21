@@ -36,7 +36,7 @@ src/
     driven/github/ driven/jira/ driven/jsm/   # later
     driven/postgres/
     driven/auth-basic/    # v1; auth0 later as another AuthProvider
-web/               # React UI; talks to the HTTP API only
+web/               # React UI; talks to the HTTP API only (types from views/contract.ts)
 ```
 
 Dependency direction points inward: `adapters → application → domain`. The domain imports nothing from application or adapters. An ESLint import rule (or dependency-cruiser) enforces this; keep it passing.
@@ -66,17 +66,25 @@ A feature is done when its tests in all relevant layers pass. Write the failing 
 
 ## Commands
 
-- `npm run dev` — start Postgres (host port 5433) and the API via Docker Compose; `GET :3000/health`
+- `npm run dev` — Postgres (host port 5433), API (:3000) and web (:5173) via Docker Compose; sign in `admin` / `admin`
 - `npm test` — all tests (integration and use-case projects need Docker running for Testcontainers)
-- `npm run test:unit` / `test:integration` / `test:use-cases`
-- `npm run lint` — ESLint, including the dependency-direction rule (self-tested in `tests/lint/`)
-- `npm run typecheck` — `tsc --noEmit`
-- `npm run migrate` — apply SQL migrations (needs Postgres: `docker compose up -d postgres`, port 5433)
-- `npm run seed` — load 12 months of dummy data through `syncSource` (empty database only)
-- `npm run grid` — print the team benchmark grid (`-- --days 30|default`, `-- --as-of YYYY-MM-DD`)
+- `npm run test:unit` / `test:integration` / `test:use-cases` (the `web` project runs with `npm test`)
+- `npm run lint` — ESLint, including the dependency-direction rules (self-tested in `tests/lint/`)
+- `npm run typecheck` — `tsc --noEmit` for the backend and for `web/`
+- `npm run dev:api` / `npm run dev:web` — run the API or web outside Docker (needs `docker compose up -d postgres`)
+- `npm run migrate` / `npm run seed` / `npm run grid` — apply migrations / load the dummy world / print the team benchmark grid (`-- --days 30|default`, `-- --as-of YYYY-MM-DD`)
+
+## The web app and the API contract
+
+`web/` is React + Vite and talks to the HTTP API only. The one thing it shares with the backend is
+`src/application/views/contract.ts` (types only, imported as `@contract`); a lint rule forbids any other import from `src/`.
+Use cases return **display-ready view models** (formatted values, labels, colour keys, tooltips) so no metric text or
+threshold is ever hard-coded in the UI. The dummy world runs on a simulated clock (`SimWorld`): "Run now" advances the fake
+source one day and "today" moves with it.
 
 ## Working conventions
 
 - Small, reviewable commits; one use case or adapter per change where possible.
 - Update `docs/spec.md` when a decision changes; update the registry (not the UI) when a metric changes.
-- Out of scope for v1: product/business metrics, SLAs/SLOs, Slite, annotations (UI placeholder only), roles beyond a single admin.
+- Out of scope for v1: product/business metrics, SLAs/SLOs, Slite, annotations (UI placeholder only), roles beyond a single admin
+- Not built yet: the scheduled worker (polling happens via "Run now"), the real GitHub/Jira/JSM adapters, Auth0.

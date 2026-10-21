@@ -1,3 +1,5 @@
+# npm run dev: Postgres, the API (migrates and seeds the dummy world on first boot) and the web app.
+# Web:  http://localhost:5173   API: http://localhost:3000   Postgres: localhost:5433
 services:
   postgres:
     image: postgres:16
@@ -17,13 +19,37 @@ services:
 
   api:
     build: .
+    command: ["npx", "tsx", "watch", "src/main.ts"]
     environment:
       PORT: "3000"
       DATABASE_URL: postgres://dashboard:dashboard@postgres:5432/dashboard
     ports:
       - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./migrations:/app/migrations
     depends_on:
       postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 5s
+
+  web:
+    build: .
+    command: ["npm", "run", "dev", "-w", "web", "--", "--host", "0.0.0.0"]
+    environment:
+      API_URL: http://api:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web/src:/app/web/src
+      - ./src:/app/src
+    depends_on:
+      api:
         condition: service_healthy
 
 volumes:

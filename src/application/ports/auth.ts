@@ -9,6 +9,8 @@ export interface AuthUser {
 /** Checks credentials. Basic auth in v1; an Auth0/OIDC adapter can implement the same port later. */
 export interface AuthProvider {
   authenticate(username: string, password: string): Promise<AuthUser | null>;
+  /** True if the current password was right and the new one was stored. */
+  changePassword(username: string, current: string, next: string): Promise<boolean>;
 }
 
 export interface SessionStore {

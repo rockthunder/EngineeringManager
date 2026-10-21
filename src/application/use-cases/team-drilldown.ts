@@ -53,9 +53,9 @@ export async function getTeamDrilldown(deps: ViewDeps, req: DrilldownRequest): P
   if (!team) throw new NotFoundError(`No team ${req.teamId}`);
   const input = { ...base, today };
 
-  const current = computeBenchmarkGrid(input, { endDay, compare: true, version, ...(windowDays === undefined ? {} : { windowDays }) });
+  const current = computeBenchmarkGrid(input, { endDay, compare: true, version, includeArchived: true, ...(windowDays === undefined ? {} : { windowDays }) });
   const row = current.rows.find((r) => r.teamId === team.id)!;
-  const monthly = computeMonthly(input, months, version);
+  const monthly = computeMonthly(input, months, version, true);
 
   const metrics: DrilldownMetric[] = REGISTRY.map((def, i) => {
     const cell = row.cells[i]!;

@@ -131,3 +131,20 @@ tr.atabove td { padding: 6px 9px; background: var(--surface); }
 .barrow.over .fill { opacity: 1; background: var(--text); }
 .barline { position: absolute; top: -3px; bottom: -3px; border-left: 2px dashed var(--text); }
 .barrow-val { text-align: right; font-variant-numeric: tabular-nums; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin: 8px 0 16px; }
+.tabs a { padding: 8px 14px; text-decoration: none; color: var(--text); border-bottom: 2px solid transparent; }
+.tabs a.active { border-bottom-color: var(--accent); font-weight: 600; }
+.num { width: 84px; }
+table.plain { border-collapse: collapse; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 8px 0 16px; }
+table.plain th, table.plain td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+table.plain tr.archived { opacity: .6; }
+.mono { font-family: ui-monospace, Menlo, monospace; }
+.form { display: grid; gap: 10px; margin: 12px 0; }
+.form label { display: grid; gap: 3px; font-weight: 600; }
+.form label input, .form label select { font-weight: 400; }
+.publish { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin: 14px 0; }
+.publish p { margin: 2px 0 0; }
+table.editor td, table.editor th { vertical-align: middle; padding: 5px 8px; }
+table.editor tr.dirty { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.versions { padding-left: 22px; } .versions li { margin-bottom: 8px; }

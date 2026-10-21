@@ -12,7 +12,12 @@ export interface AppDeps {
   /** Wall-clock time, for session expiry. */
   readonly authClock: Clock;
   /** The source behind "Run now"; `advance` reveals the next simulated day for the fake source. */
-  readonly sync?: { readonly source: SourceSet; readonly advance?: () => Promise<void> };
+  readonly sync?: {
+    readonly source: SourceSet;
+    readonly advance?: () => Promise<void>;
+    /** For the dummy world: the simulated watermark day. */
+    readonly watermarkDay?: () => string;
+  };
   readonly secureCookies?: boolean;
 }
 

@@ -10,7 +10,7 @@ export class PostgresConfigStore implements ConfigStore {
 
   async loadOrganisation(): Promise<Organisation> {
     const [profiles, groups, teams, mappings] = await Promise.all([
-      this.pool.query('SELECT id, name FROM profiles ORDER BY id'),
+      this.pool.query("SELECT id, name FROM profiles ORDER BY (id <> 'product'), id"),
       this.pool.query('SELECT id, name FROM groups ORDER BY id'),
       this.pool.query('SELECT * FROM teams ORDER BY id'),
       this.pool.query('SELECT * FROM team_mappings ORDER BY kind, ref, effective_from'),

@@ -58,6 +58,8 @@ export interface GridRequest {
   readonly compare?: boolean;
   /** Grade against the version in force at `endDay` (default) or today's. */
   readonly version?: 'in_force' | 'today';
+  /** Archived teams are hidden from rows by default; their events still count in org figures. */
+  readonly includeArchived?: boolean;
 }
 
 export interface GridInput {
@@ -79,6 +81,7 @@ export function computeBenchmarkGrid(input: GridInput, req: GridRequest = {}): B
 
   const index = buildIndex(events);
   const attributed = attributeEvents(events, organisation.mappings, definitions);
+  // Every team's events pool into the org figure, archived or not; only the rows hide archived teams.
   const teams = [...organisation.teams].sort((a, b) => a.name.localeCompare(b.name));
 
   const teamCells = new Map<string, GridCell[]>(teams.map((t) => [t.id, []]));
@@ -125,7 +128,7 @@ export function computeBenchmarkGrid(input: GridInput, req: GridRequest = {}): B
     benchmarkVersion: version.number,
     benchmarkEffectiveFrom: version.effectiveFrom,
     metrics,
-    rows: teams.map((t) => ({
+    rows: teams.filter((t) => req.includeArchived || !t.archived).map((t) => ({
       teamId: t.id, teamName: t.name, profileId: t.profileId, groupId: t.groupId, cells: teamCells.get(t.id)!,
     })),
     org: { cells: orgCells },

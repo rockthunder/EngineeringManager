@@ -23,6 +23,10 @@ export class PostgresUserStore implements UserLookup {
     );
   }
 
+  async list(): Promise<{ username: string; role: string }[]> {
+    return (await this.pool.query('SELECT username, role FROM users ORDER BY username')).rows;
+  }
+
   async count(): Promise<number> {
     return (await this.pool.query('SELECT count(*)::int AS n FROM users')).rows[0].n;
   }

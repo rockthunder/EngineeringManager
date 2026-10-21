@@ -23,7 +23,7 @@ const app = buildApp({
   auth: new BasicAuthProvider(stores.users),
   clock: sim.clock,
   authClock: systemClock,
-  sync: { source: sim.source.asSourceSet(), advance: () => sim.advance() },
+  sync: { source: sim.source.asSourceSet(), advance: () => sim.advance(), watermarkDay: () => sim.watermarkDay },
 });
 await app.listen({ port, host: '0.0.0.0' });
 console.log(`api listening on :${port} (dummy world at ${sim.watermarkDay})`);

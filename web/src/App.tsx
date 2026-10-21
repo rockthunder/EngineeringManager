@@ -9,6 +9,7 @@ import { Login } from './pages/Login';
 import { OrgBenchmark } from './pages/OrgBenchmark';
 import { TeamDrilldown } from './pages/TeamDrilldown';
 import { TlTeam } from './pages/TlTeam';
+import { Settings } from './pages/Settings';
 import { Soon } from './pages/Soon';
 import { TeamBenchmark } from './pages/TeamBenchmark';
 
@@ -25,6 +26,7 @@ export function App() {
         <Route path="views/em-director" element={<EmDirector />} />
         <Route path="views/em-tl" element={<EmTl />} />
         <Route path="views/tl-team" element={<TlTeam />} />
+        <Route path="settings/*" element={<Settings />} />
         <Route path="glossary" element={<Glossary />} />
         <Route path="*" element={<Soon title="Not found" />} />
       </Route>

@@ -1,5 +1,5 @@
 import type { AuthProvider, AuthUser } from '../../../application/ports/auth';
-import { verifyPassword } from './password';
+import { hashPassword, verifyPassword } from './password';
 
 export interface UserRecord {
   readonly id: number;
@@ -9,6 +9,7 @@ export interface UserRecord {
 
 export interface UserLookup {
   findByUsername(username: string): Promise<UserRecord | null>;
+  upsert(username: string, passwordHash: string): Promise<void>;
 }
 
 /** Username + hashed password, behind the AuthProvider port. */
@@ -20,5 +21,11 @@ export class BasicAuthProvider implements AuthProvider {
     // Always do a verification so a wrong username costs the same as a wrong password.
     const ok = await verifyPassword(password, user?.passwordHash ?? 'scrypt$16384$00$00');
     return user && ok ? { id: user.id, username: user.username, role: 'admin' } : null;
+  }
+
+  async changePassword(username: string, current: string, next: string): Promise<boolean> {
+    if (!(await this.authenticate(username, current))) return false;
+    await this.users.upsert(username, await hashPassword(next));
+    return true;
   }
 }

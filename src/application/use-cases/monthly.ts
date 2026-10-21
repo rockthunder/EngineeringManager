@@ -35,6 +35,7 @@ export function computeMonthly(
   input: GridInput,
   months: readonly Day[],
   version: 'in_force' | 'today' = 'in_force',
+  includeArchived = false,
 ): MonthlyGrid[] {
-  return months.map((endDay) => ({ endDay, grid: computeBenchmarkGrid(input, { endDay, compare: false, version }) }));
+  return months.map((endDay) => ({ endDay, grid: computeBenchmarkGrid(input, { endDay, compare: false, version, includeArchived }) }));
 }

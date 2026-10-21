@@ -1,4 +1,4 @@
-import type { EventQuery, EventStore } from '../../../application/ports/event-store';
+import type { EventQuery, EventStore, KnownRefs } from '../../../application/ports/event-store';
 import type {
   Deployment, EventSet, Incident, PullRequest, Sprint, SurveyResponse, WorkItem,
 } from '../../../domain/events/types';
@@ -6,6 +6,16 @@ import { instant, ms, type Pool } from './pool';
 
 export class PostgresEventStore implements EventStore {
   constructor(private readonly pool: Pool) {}
+
+  async distinctRefs(): Promise<KnownRefs> {
+    const col = async (sql: string) => (await this.pool.query<{ ref: string }>(sql)).rows.map((r) => r.ref);
+    const [repo, board, service] = await Promise.all([
+      col('SELECT repo AS ref FROM deployments UNION SELECT repo FROM pull_requests ORDER BY 1'),
+      col('SELECT board AS ref FROM work_items UNION SELECT board FROM sprints ORDER BY 1'),
+      col('SELECT service AS ref FROM incidents ORDER BY 1'),
+    ]);
+    return { repo, board, service: [...new Set(service)] };
+  }
 
   async loadEvents({ window, doneStatuses }: EventQuery): Promise<EventSet> {
     const from = ms(window.from);

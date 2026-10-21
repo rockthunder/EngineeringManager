@@ -241,3 +241,107 @@ export interface TlTeamView extends PageContext {
     readonly expectedPercent: number;
   } | null;
 }
+
+// ── Settings ────────────────────────────────────────────────────────────────
+
+export type LevelKey = 'elite' | 'high' | 'medium' | 'low';
+
+export interface LevelValues {
+  readonly elite: number;
+  readonly high: number;
+  readonly medium: number;
+}
+
+export interface BenchmarkMetricConfig {
+  readonly id: string;
+  readonly name: string;
+  readonly unitLabel: string;
+  readonly direction: 'higher' | 'lower';
+  readonly group: MetricHeader['group'];
+  /** Per profile, resolved (Platform inherits Product unless overridden). */
+  readonly thresholds: Readonly<Record<string, LevelValues>>;
+  readonly overridden: Readonly<Record<string, boolean>>;
+  /** What each threshold means in words, per profile, e.g. "under 1 day". */
+  readonly text: Readonly<Record<string, { elite: string; high: string; medium: string }>>;
+  readonly bar: LevelKey;
+  /** Per-profile bar overrides; null = follows the org bar. */
+  readonly barByProfile: Readonly<Record<string, LevelKey | null>>;
+}
+
+export interface BenchmarkConfigView {
+  readonly today: string;
+  readonly inForce: number;
+  readonly latest: { readonly number: number; readonly effectiveFrom: string };
+  readonly versions: readonly { number: number; effectiveFrom: string; inForce: boolean; changes: readonly string[] }[];
+  readonly profiles: readonly Option[];
+  readonly metrics: readonly BenchmarkMetricConfig[];
+  /** Earliest day a new version can take effect. */
+  readonly minEffectiveFrom: string;
+}
+
+export interface TeamAdminTeam {
+  readonly id: string;
+  readonly name: string;
+  readonly profile: string;
+  readonly groupId: string;
+  readonly groupName: string;
+  readonly headcount: number;
+  readonly archived: boolean;
+  readonly mappings: readonly { kind: 'repo' | 'board' | 'service'; ref: string; effectiveFrom: string; effectiveTo: string | null }[];
+}
+
+export interface KnownRef {
+  readonly ref: string;
+  /** The team it belongs to today, or null if unmapped. */
+  readonly owner: string | null;
+  readonly ownerId: string | null;
+}
+
+export interface TeamAdminView {
+  readonly today: string;
+  readonly teams: readonly TeamAdminTeam[];
+  readonly groups: readonly Option[];
+  readonly profiles: readonly Option[];
+  readonly refs: { readonly repo: readonly KnownRef[]; readonly board: readonly KnownRef[]; readonly service: readonly KnownRef[] };
+}
+
+export interface StreamStatus {
+  readonly stream: string;
+  readonly status: 'never' | 'running' | 'succeeded' | 'failed';
+  readonly lastRunAt: string | null;
+  readonly upserted: number;
+  readonly error: string | null;
+  readonly cursor: string | null;
+}
+
+export interface SourceDefinitionsView {
+  readonly productionEnvironment: string;
+  readonly statusClasses: Readonly<Record<string, 'todo' | 'active' | 'waiting' | 'done'>>;
+  readonly foundInProductionLabel: string;
+  readonly hotfixLabel: string;
+  readonly issueTypeCategories: Readonly<Record<string, 'new_capability' | 'maintenance' | 'defect' | 'tech_debt'>>;
+  readonly categoryLabels: Readonly<Record<string, 'new_capability' | 'maintenance' | 'defect' | 'tech_debt'>>;
+}
+
+export interface DataSourcesView {
+  readonly today: string;
+  readonly dataAsOf: string | null;
+  /** True for the dummy world: "Run now" emits the next simulated day. */
+  readonly simulated: boolean;
+  readonly watermarkDay: string | null;
+  readonly pollEveryHours: number;
+  readonly backfillDays: number;
+  readonly sources: readonly { readonly name: string; readonly label: string; readonly streams: readonly StreamStatus[] }[];
+  readonly recentRuns: readonly { id: number; stream: string; status: string; startedAt: string; upserted: number; error: string | null; mode: 'backfill' | 'incremental' }[];
+  readonly definitions: SourceDefinitionsView;
+}
+
+export interface SettingsView {
+  readonly defaultRange: Exclude<RangeKey, 'custom'>;
+  readonly screenDefaults: Readonly<Record<string, Exclude<RangeKey, 'custom'>>>;
+  readonly colourMode: 'distance' | 'level';
+  readonly colours: Readonly<Record<string, string>>;
+  readonly pollEveryHours: number;
+  readonly backfillDays: number;
+  readonly surveyMinResponses: number;
+}

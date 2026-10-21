@@ -71,7 +71,9 @@ A feature is done when its tests in all relevant layers pass. Write the failing 
 - `npm run test:unit` / `test:integration` / `test:use-cases`
 - `npm run lint` — ESLint, including the dependency-direction rule (self-tested in `tests/lint/`)
 - `npm run typecheck` — `tsc --noEmit`
-- `npm run migrate` / `npm run seed` / `npm run grid` — added with step 3 (migrations, dummy data, print the team benchmark grid)
+- `npm run migrate` — apply SQL migrations (needs Postgres: `docker compose up -d postgres`, port 5433)
+- `npm run seed` — load 12 months of dummy data through `syncSource` (empty database only)
+- `npm run grid` — print the team benchmark grid (`-- --days 30|default`, `-- --as-of YYYY-MM-DD`)
 
 ## Working conventions
 

@@ -158,6 +158,26 @@ describe('FakeSource', () => {
     expect(depCount('delta-monolith')).toBeGreaterThanOrEqual(3);
   });
 
+  it('uses whole-millisecond instants everywhere (what a database can hold exactly)', async () => {
+    const since = a.scenario.historyStart;
+    const s = streams(a);
+    const all = [
+      ...(await s.deployments(null, since)).items,
+      ...(await s.pullRequests(null, since)).items,
+      ...(await s.workItems(null, since)).items,
+      ...(await s.sprints(null, since)).items,
+      ...(await s.incidents(null, since)).items,
+    ];
+    const numbers: number[] = [];
+    const walk = (v: unknown) => {
+      if (typeof v === 'number') numbers.push(v);
+      else if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+    };
+    walk(all);
+    expect(numbers.filter((n) => !Number.isInteger(n))).toEqual([]);
+  });
+
   it('puts no person-identifying field in any event', async () => {
     const since = a.scenario.historyStart;
     const s = streams(a);

@@ -288,6 +288,18 @@ Both early decisions are made, so the build can start in Claude Code. The dummy 
 - **Stack.** TypeScript throughout, with a Fastify API and worker, a React UI, Postgres, and Docker Compose for local running.
 - **Survey minimum.** 4 responses, with teams below that shown only within their group.
 
+**Decided while building steps 1–3** (revisit if they don't suit)
+
+- **Change** = a pull request that reached production. Lead time is first commit to the production deployment; escaped defects are per 100 such changes.
+- **Change failure rate** = production deploys with a linked incident or flagged rollback ÷ all production deploys. **Rework rate** (hotfix deploys) is separate, so the two don't double count.
+- **Deployment frequency and throughput** divide by the days the team was actually mapped inside the window, so a new team isn't diluted. The org figure is the sum, **graded on the per-team average**.
+- **Minimum sample for deployment frequency** (14 days) is days of mapping coverage, not number of deploys, so a very quiet team with a weekly deploy is still graded.
+- **Platform profile** differs from Product on deployment frequency only (Elite ≥ 2, High ≥ 0.5, Medium ≥ 0.1 per week).
+- **Trend** is "steady" within ±5 % relative change of the previous period; throughput shows movement but is never judged.
+- **DevEx score** uses the team's latest campaign as of the end of the window, so the previous period compares against the previous campaign.
+- **Survey responses** in the dummy data are written straight to the event store by the seeder; there is no survey source port.
+- **Incident to deployment link** is by deployment id; a deployment's failure is looked up across all teams, so a reorg boundary can't hide an incident.
+
 **Decisions needed before real data**
 
 - Do pipelines record production deploys as GitHub deployments or environments? If not, which system does?

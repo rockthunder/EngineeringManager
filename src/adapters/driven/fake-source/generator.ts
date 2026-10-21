@@ -85,12 +85,12 @@ function generateRepo(cfg: WorldConfig, repo: RepoPlan): RepoOutput {
     for (let k = 0; k < count; k++) {
       const r = streamFor(cfg.seed, 'pr', repo.name, day, k);
       const id = `${repo.name}#${day}.${k}`;
-      const openedAt = dayToInstant(day) + hours(r.uniform(8, 17));
-      const firstCommitAt = openedAt - hours(r.logNormal(b.codingH[0] * speed, b.codingH[1]));
-      const firstReviewAt = openedAt + hours(r.logNormal(b.pickupH[0] * speed, b.pickupH[1]));
-      const mergedAt = firstReviewAt + hours(r.logNormal(b.reviewH[0] * speed, b.reviewH[1]));
+      const openedAt = Math.round(dayToInstant(day) + hours(r.uniform(8, 17)));
+      const firstCommitAt = Math.round(openedAt - hours(r.logNormal(b.codingH[0] * speed, b.codingH[1])));
+      const firstReviewAt = Math.round(openedAt + hours(r.logNormal(b.pickupH[0] * speed, b.pickupH[1])));
+      const mergedAt = Math.round(firstReviewAt + hours(r.logNormal(b.reviewH[0] * speed, b.reviewH[1])));
       const linesChanged = Math.max(1, Math.round(r.logNormal(b.sizeLines[0] * Math.sqrt(speed), b.sizeLines[1])));
-      const eligibleAt = mergedAt + hours(r.logNormal(b.deployDelayH[0] * speed, b.deployDelayH[1]));
+      const eligibleAt = Math.round(mergedAt + hours(r.logNormal(b.deployDelayH[0] * speed, b.deployDelayH[1])));
 
       const slotAt = nextSlot(b, eligibleAt, cfg.startDay);
       const deploymentId = b.cadence.kind === 'perMerge' ? `${repo.name}|m|${id}` : `${repo.name}|${slotAt}`;
@@ -109,10 +109,10 @@ function generateRepo(cfg: WorldConfig, repo: RepoPlan): RepoOutput {
     const nBg = bg.poisson(repo.backgroundIncidentsPerMonth / 30);
     for (let k = 0; k < nBg; k++) {
       const r = streamFor(cfg.seed, 'bg-incident', repo.name, day, k);
-      const startedAt = dayToInstant(day) + hours(r.uniform(0, 24));
+      const startedAt = Math.round(dayToInstant(day) + hours(r.uniform(0, 24)));
       out.incidents.push({
         source: SOURCE, sourceId: `inc|${repo.name}|bg|${day}.${k}`, updatedAt: startedAt, service: repo.service,
-        startedAt, restoredAt: startedAt + hours(r.logNormal(b.recoveryH[0] * speed, b.recoveryH[1])), deploymentId: null,
+        startedAt, restoredAt: Math.round(startedAt + hours(r.logNormal(b.recoveryH[0] * speed, b.recoveryH[1]))), deploymentId: null,
       });
     }
   }
@@ -128,8 +128,8 @@ function generateRepo(cfg: WorldConfig, repo: RepoPlan): RepoOutput {
 
     const cfr = Math.min(0.45, b.changeFailureRate * (b.driftsFailureRate ? Math.sqrt(speed) : 1));
     if (r.chance(cfr)) {
-      const startedAt = slot.at + hours(r.logNormal(0.3, 0.5));
-      const restoredAt = startedAt + hours(r.logNormal(b.recoveryH[0] * speed, b.recoveryH[1]));
+      const startedAt = Math.round(slot.at + hours(r.logNormal(0.3, 0.5)));
+      const restoredAt = Math.round(startedAt + hours(r.logNormal(b.recoveryH[0] * speed, b.recoveryH[1])));
       const rollback = r.chance(b.rollbackShare);
       const last = out.deployments[out.deployments.length - 1]!;
       out.deployments[out.deployments.length - 1] = { ...last, isRollback: rollback };
@@ -140,7 +140,7 @@ function generateRepo(cfg: WorldConfig, repo: RepoPlan): RepoOutput {
     }
 
     if (r.chance(b.reworkRate)) {
-      const at = slot.at + hours(r.logNormal(8, 0.6));
+      const at = Math.round(slot.at + hours(r.logNormal(8, 0.6)));
       out.deployments.push({
         source: SOURCE, sourceId: `${id}|hotfix`, updatedAt: at, repo: repo.name, environment: 'production', at,
         commitShas: [sha(`${id}|hotfix`)], isRework: true, isRollback: false,
@@ -181,13 +181,13 @@ function generateBoard(cfg: WorldConfig, board: BoardPlan): BoardOutput {
     for (let k = 0; k < count; k++) {
       const r = streamFor(cfg.seed, 'item', board.name, day, k);
       const key = `${board.prefix}-${1000 + k + 20 * Math.round((dayToInstant(day) - dayToInstant(cfg.startDay)) / MS_PER_DAY)}`;
-      const createdAt = dayToInstant(day) + hours(r.uniform(8, 17));
+      const createdAt = Math.round(dayToInstant(day) + hours(r.uniform(8, 17)));
       const type = pickType(r, b.mix);
       const foundInProduction = type === 'Bug' && r.chance(b.bugFoundInProd);
       const urgent = r.chance(b.unplannedShare);
       const startAt = urgent
-        ? createdAt + hours(r.logNormal(3, 0.6))
-        : sprintStart(epoch, sprintIndex(epoch, createdAt) + 1) + days(r.uniform(0.2, 9));
+        ? Math.round(createdAt + hours(r.logNormal(3, 0.6)))
+        : Math.round(sprintStart(epoch, sprintIndex(epoch, createdAt) + 1) + days(r.uniform(0.2, 9)));
 
       const cycle = days(r.logNormal(b.cycleDays[0] * speed, b.cycleDays[1]));
       const active = Math.min(cycle * 0.95, cycle * b.flowEfficiency * r.uniform(0.8, 1.2));

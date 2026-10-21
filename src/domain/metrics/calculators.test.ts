@@ -244,6 +244,18 @@ describe('devex_score', () => {
   });
 });
 
+describe('devex_score as of a date', () => {
+  it('ignores campaigns submitted after the window end, so trends compare successive campaigns', () => {
+    const c1 = [response({ campaignId: 'c1', submittedDay: '2026-08-10', scoreAnswers: [3, 3, 3] })]; // 50
+    const c2 = [response({ campaignId: 'c2', submittedDay: '2026-09-10', scoreAnswers: [5, 5, 5] })]; // 100
+    const ev = events({ surveyResponses: [...c1, ...c2] });
+    const early = { from: T0 - d(30), to: T0 + d(5) }; // ends 2026-09-06
+    const ctx = buildContext(ev, DEFS, early, 30);
+    expect(finalize(REGISTRY_BY_ID.devex_score.measure(ev, ctx))).toBe(50);
+    expect(run('devex_score', ev).value).toBe(100);
+  });
+});
+
 describe('empty input', () => {
   it('yields no value and a zero sample (days-based metrics report coverage)', () => {
     for (const id of Object.keys(REGISTRY_BY_ID) as MetricId[]) {

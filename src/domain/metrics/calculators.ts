@@ -7,7 +7,7 @@ import {
   type SourceDefinitions,
 } from '../events/definitions';
 import type { Deployment, EventSet, WorkItem } from '../events/types';
-import { inWindow, MS_PER_DAY, MS_PER_HOUR } from '../time/day';
+import { dayToInstant, inWindow, MS_PER_DAY, MS_PER_HOUR } from '../time/day';
 import type { Measurement, MetricContext } from './types';
 
 const prodDeploys = (ev: EventSet, ctx: MetricContext): Deployment[] =>
@@ -179,10 +179,14 @@ export const unplannedWork = (ev: EventSet, ctx: MetricContext): Measurement => 
   return percent(unplanned, done.length);
 };
 
-/** Responses from the team's latest campaign (greatest last-submission day; ties by id). */
-export const devexScore = (ev: EventSet): Measurement => {
+/**
+ * Responses from the team's latest campaign as of the window end (greatest last-submission
+ * day; ties by id), so the previous period compares against the previous campaign.
+ */
+export const devexScore = (ev: EventSet, ctx: MetricContext): Measurement => {
   const lastDay = new Map<string, string>();
-  for (const r of ev.surveyResponses) {
+  const known = ev.surveyResponses.filter((r) => dayToInstant(r.submittedDay) < ctx.window.to);
+  for (const r of known) {
     const prev = lastDay.get(r.campaignId);
     if (prev === undefined || r.submittedDay > prev) lastDay.set(r.campaignId, r.submittedDay);
   }
@@ -194,7 +198,7 @@ export const devexScore = (ev: EventSet): Measurement => {
       if (day > cur || (day === cur && id > latest)) latest = id;
     }
   }
-  const scores = ev.surveyResponses
+  const scores = known
     .filter((r) => r.campaignId === latest && r.scoreAnswers.length > 0)
     .map((r) => ((r.scoreAnswers.reduce((a, b) => a + b, 0) / r.scoreAnswers.length - 1) / 4) * 100);
   return { kind: 'mean', sum: scores.reduce((a, b) => a + b, 0), count: scores.length, sampleSize: scores.length };

@@ -16,6 +16,8 @@ import { instantToDay, lastNDays, previousWindow, type Day, type Window } from '
 import type { Clock } from '../ports/clock';
 import type { ConfigStore } from '../ports/config-store';
 import type { EventStore } from '../ports/event-store';
+import type { SettingsStore } from '../ports/settings-store';
+import { loadSettings } from '../settings';
 
 export interface GridCell {
   readonly metricId: MetricId;
@@ -68,6 +70,8 @@ export interface GridInput {
   readonly definitions: SourceDefinitions;
   readonly versions: readonly BenchmarkVersion[];
   readonly today: Day;
+  /** Configured survey minimum (never below 3): the DevEx cell is not graded below it. */
+  readonly surveyMin?: number;
 }
 
 /** Pure grid computation from already-loaded raw events: nothing is persisted or fetched. */
@@ -107,7 +111,10 @@ export function computeBenchmarkGrid(input: GridInput, req: GridRequest = {}): B
         value: finalize(m),
         gradedValue,
         sampleSize: m.sampleSize,
-        grade: gradeMetric(def, gradedValue, m.sampleSize, version, profile),
+        grade: gradeMetric(
+          def.id === 'devex_score' && input.surveyMin ? { ...def, minSample: { ...def.minSample, count: input.surveyMin } } : def,
+          gradedValue, m.sampleSize, version, profile,
+        ),
         thresholds: thresholdsFor(version, profile, def.id),
         bar: barFor(version, profile, def.id),
         trend: o
@@ -139,6 +146,8 @@ export interface GridDeps {
   readonly eventStore: EventStore;
   readonly configStore: ConfigStore;
   readonly clock: Clock;
+  /** When present, the configured survey minimum applies to the DevEx cell. */
+  readonly settingsStore?: SettingsStore;
 }
 
 /** Load raw events (covering `window`) and config: everything computeBenchmarkGrid needs. */
@@ -152,7 +161,8 @@ export async function loadGridInput(deps: GridDeps, window: Window): Promise<Omi
     .filter(([, c]) => c === 'done')
     .map(([s]) => s);
   const events = await deps.eventStore.loadEvents({ window, doneStatuses });
-  return { events, organisation, definitions, versions };
+  const surveyMin = deps.settingsStore ? (await loadSettings(deps.settingsStore)).surveyMinResponses : undefined;
+  return { events, organisation, definitions, versions, ...(surveyMin === undefined ? {} : { surveyMin }) };
 }
 
 /** Load raw events and config, then compute the grid on read. */

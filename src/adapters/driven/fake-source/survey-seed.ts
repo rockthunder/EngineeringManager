@@ -6,7 +6,7 @@ import type { Scenario } from './scenario';
 const CAMPAIGN_OFFSETS = [-300, -210, -120, -30];
 const SCORE_QUESTIONS = 7;
 
-/** Quarterly DevEx campaigns, anonymous. Iris stays below the 4-response minimum. */
+/** Quarterly DevEx campaigns, anonymous. Iris (two engineers) stays below the 4-response minimum. */
 export function dummySurveyResponses(seed: number, scenario: Scenario): SurveyResponse[] {
   const out: SurveyResponse[] = [];
   for (const offset of CAMPAIGN_OFFSETS) {

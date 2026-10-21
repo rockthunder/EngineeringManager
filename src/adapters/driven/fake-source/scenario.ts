@@ -191,7 +191,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
       startDay: historyStart,
       behaviour: {
         ...base, engineers: 2, prsPerEngineerWeek: 0.6, itemsPerEngineerWeek: 0.5,
-        survey: { mean: 3.8, responseRate: 1, fixedResponses: 3 },
+        survey: { mean: 3.8, responseRate: 1, fixedResponses: 2 },
       },
     },
     { team: team('juniper', 'Juniper', 'product', 'south', 5), repos: [], startDay: reorgDay, behaviour: juniper },

@@ -213,7 +213,7 @@ describe('dummy survey responses', () => {
     const rs = dummySurveyResponses(SEED, sc);
     const latest = rs.filter((r) => r.campaignId === 'devex-2026-09-21');
     const count = (team: string) => latest.filter((r) => r.teamId === team).length;
-    expect(count('iris')).toBe(3);
+    expect(count('iris')).toBe(2);
     expect(count('aurora')).toBeGreaterThanOrEqual(4);
     expect(new Set(rs.map((r) => r.campaignId)).size).toBe(4);
     expect(JSON.stringify(rs[0])).not.toMatch(/email|name|ip|agent/i);

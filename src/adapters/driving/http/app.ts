@@ -4,6 +4,7 @@ import { ValidationError } from '../../../application/errors';
 import { registerAdminRoutes } from './admin-routes';
 import { registerAuth } from './auth-routes';
 import { registerBenchmarkRoutes } from './benchmark-routes';
+import { registerSurveyRoutes } from './survey-routes';
 import type { AppDeps } from './deps';
 
 /** Thin HTTP driving adapter: routes validate input and call use cases, nothing more. */
@@ -16,6 +17,7 @@ export function buildApp(deps?: AppDeps): FastifyInstance {
   registerAuth(app, deps);
   registerBenchmarkRoutes(app, deps);
   registerAdminRoutes(app, deps);
+  registerSurveyRoutes(app, deps);
   app.setErrorHandler((err: Error & { statusCode?: number }, _req, reply) => {
     const status = err.statusCode ?? (err.name === 'NotFoundError' ? 404 : err.name === 'ValidationError' || err instanceof ValidationError ? 400 : 500);
     void reply.code(status).send({ error: status >= 500 ? 'Internal error' : err.message });

@@ -1,5 +1,6 @@
 import type { AuthProvider, AuthUser } from '../../../application/ports/auth';
 import type { Clock } from '../../../application/ports/clock';
+import type { IdGenerator } from '../../../application/ports/ids';
 import type { SourceSet } from '../../../application/ports/source';
 import type { Stores } from '../../driven/postgres';
 
@@ -18,6 +19,8 @@ export interface AppDeps {
     /** For the dummy world: the simulated watermark day. */
     readonly watermarkDay?: () => string;
   };
+  /** Defaults to crypto-random ids and tokens. */
+  readonly ids?: IdGenerator;
   readonly secureCookies?: boolean;
 }
 

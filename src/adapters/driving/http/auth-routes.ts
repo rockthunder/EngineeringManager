@@ -4,6 +4,7 @@ import type { AppDeps } from './deps';
 
 export const SESSION_COOKIE = 'session';
 
+// '/api/s/' (with the slash) is the public survey link; '/api/surveys' is not covered by it.
 const PUBLIC_PREFIXES = ['/api/login', '/api/s/', '/health'];
 
 export function registerAuth(app: FastifyInstance, deps: AppDeps): void {

@@ -59,7 +59,7 @@ describe('journey: the Director opens the team benchmark for the last 30 days', 
       expect(g, id).toMatchObject({ status: 'insufficient_data' });
       if (g.status === 'insufficient_data') expect(g.sampleSize).toBeLessThan(g.minSample);
     }
-    expect(cell('Iris', 'devex_score').grade).toEqual({ status: 'insufficient_data', sampleSize: 3, minSample: 4 });
+    expect(cell('Iris', 'devex_score').grade).toEqual({ status: 'insufficient_data', sampleSize: 2, minSample: 4 });
   });
 
   it('never grades throughput', () => {

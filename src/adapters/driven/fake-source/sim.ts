@@ -2,6 +2,8 @@ import type { Clock } from '../../../application/ports/clock';
 import type { ConfigStore } from '../../../application/ports/config-store';
 import type { EventStore } from '../../../application/ports/event-store';
 import type { SettingsStore } from '../../../application/ports/settings-store';
+import type { SurveyStore } from '../../../application/ports/survey-store';
+import { cryptoIds } from '../crypto-ids/crypto-ids';
 import type { SyncStore } from '../../../application/ports/sync-store';
 import { dayToInstant, instantToDay, MS_PER_HOUR, type Day } from '../../../domain/time/day';
 import { FakeSource } from './fake-source';
@@ -19,6 +21,7 @@ export interface SimStores {
   readonly events: EventStore;
   readonly sync: SyncStore;
   readonly settings: SettingsStore;
+  readonly surveys: SurveyStore;
 }
 
 /**
@@ -55,7 +58,7 @@ export class SimWorld {
     const source = new FakeSource({ seed: DEFAULT_SEED, anchorDay });
     const world = new SimWorld(source, { anchorDay, watermarkDay: anchorDay }, stores);
 
-    if (!seeded) await seedDummyData(stores, source, world.clock);
+    if (!seeded) await seedDummyData(stores, source, world.clock, cryptoIds);
     while (world.state.watermarkDay < (state?.watermarkDay ?? anchorDay)) {
       source.simulateNextDay();
       world.state = { ...world.state, watermarkDay: source.watermark };

@@ -345,3 +345,96 @@ export interface SettingsView {
   readonly backfillDays: number;
   readonly surveyMinResponses: number;
 }
+
+// ── Surveys ─────────────────────────────────────────────────────────────────
+
+export interface QuestionView {
+  readonly id: string;
+  readonly type: 'agreement' | 'scale10' | 'choice' | 'text';
+  readonly text: string;
+  readonly inScore: boolean;
+  readonly required: boolean;
+  readonly choices: readonly string[];
+}
+
+export interface SurveyView {
+  readonly id: string;
+  readonly name: string;
+  /** Locked once a campaign using it has opened, so results stay comparable. */
+  readonly locked: boolean;
+  readonly questions: readonly QuestionView[];
+}
+
+export interface CampaignTeamView {
+  readonly teamId: string;
+  readonly teamName: string;
+  readonly headcount: number;
+  readonly responses: number;
+  /** Path of the team's unguessable link once the campaign has opened, e.g. /s/abc123. */
+  readonly link: string | null;
+}
+
+export interface CampaignView {
+  readonly id: string;
+  readonly surveyId: string;
+  readonly surveyName: string;
+  readonly name: string;
+  readonly opens: string;
+  readonly closes: string;
+  readonly status: 'draft' | 'open' | 'closed';
+  /** Open and between its dates: the links take responses right now. */
+  readonly accepting: boolean;
+  readonly teams: readonly CampaignTeamView[];
+  readonly totalResponses: number;
+}
+
+export interface SurveysView {
+  readonly today: string;
+  readonly minResponses: number;
+  readonly surveys: readonly SurveyView[];
+  readonly campaigns: readonly CampaignView[];
+  readonly teams: readonly (Option & { readonly headcount: number; readonly groupId: string })[];
+}
+
+export interface QuestionResultView {
+  readonly questionId: string;
+  readonly text: string;
+  readonly type: QuestionView['type'];
+  readonly inScore: boolean;
+  readonly responses: number;
+  readonly mean: number | null;
+  readonly distribution: readonly { readonly label: string; readonly count: number }[];
+}
+
+export interface ResultBlockView {
+  readonly responses: number;
+  readonly devex: number | null;
+  readonly questions: readonly QuestionResultView[];
+  readonly texts: readonly string[];
+}
+
+export interface CampaignResultsView {
+  readonly campaign: CampaignView;
+  readonly minResponses: number;
+  readonly teams: readonly (ResultBlockView & {
+    readonly teamId: string; readonly teamName: string; readonly groupId: string; readonly headcount: number;
+    readonly visible: boolean; readonly hiddenReason: string | null; readonly responseRate: number | null;
+  })[];
+  readonly groups: readonly (ResultBlockView & {
+    readonly groupId: string; readonly groupName: string; readonly visible: boolean; readonly includesHiddenTeams: boolean;
+  })[];
+  readonly org: ResultBlockView;
+}
+
+/** What a respondent sees at their team's link. Nothing else is readable without logging in. */
+export interface PublicSurveyView {
+  readonly surveyName: string;
+  readonly campaignName: string;
+  readonly teamName: string;
+  readonly questions: readonly QuestionView[];
+  readonly accepting: boolean;
+  readonly closesOn: string;
+  readonly alreadySubmitted: boolean;
+  /** Plain statement of what is and isn't stored, shown on the page. */
+  readonly privacyNote: string;
+}

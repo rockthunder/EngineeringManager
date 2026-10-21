@@ -2,6 +2,7 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import type { TestProject } from 'vitest/node';
 import { FakeSource } from '../../src/adapters/driven/fake-source/fake-source';
 import { DEFAULT_SEED, seedDummyData } from '../../src/adapters/driven/fake-source/seed';
+import { cryptoIds } from '../../src/adapters/driven/crypto-ids/crypto-ids';
 import { createPool, migrate, postgresStores } from '../../src/adapters/driven/postgres';
 import { ANCHOR, clock } from './constants';
 import { urlFor } from './postgres';
@@ -24,7 +25,7 @@ export default async function setup(project: TestProject) {
   if (project.name === 'use-cases') {
     await admin.query('CREATE DATABASE seeded TEMPLATE migrated');
     const pool = createPool(urlFor(adminUrl, 'seeded'));
-    await seedDummyData(postgresStores(pool), new FakeSource({ seed: DEFAULT_SEED, anchorDay: ANCHOR }), clock);
+    await seedDummyData(postgresStores(pool), new FakeSource({ seed: DEFAULT_SEED, anchorDay: ANCHOR }), clock, cryptoIds);
     await pool.end();
   }
   await admin.end();

@@ -39,3 +39,18 @@ export function barText(def: MetricDefinition, t: Thresholds, bar: Level): strin
     default: return v;
   }
 }
+
+const signed = (x: number, dp = 1) => `${x < 0 ? '−' : x > 0 ? '+' : ''}${num(Math.abs(x), dp)}`;
+
+/**
+ * How much a figure moved on the previous period: relative change for volumes, durations and
+ * sizes; percentage points for rates and scores (a % of a % is confusing); an absolute change
+ * when the previous value was zero.
+ */
+export function formatDelta(unit: Unit, current: number, previous: number): { text: string; previousText: string } {
+  const previousText = `was ${formatValue(unit, previous)}`;
+  if (unit === 'percent') return { text: `${signed(current - previous)} pts`, previousText };
+  if (unit === 'score') return { text: signed(Math.round(current) - Math.round(previous), 0), previousText };
+  if (previous === 0) return { text: current === 0 ? '0' : `${current > 0 ? '+' : '−'}${formatValue(unit, Math.abs(current))}`, previousText };
+  return { text: `${signed(((current - previous) / Math.abs(previous)) * 100, 0)}%`.replace('+0%', '0%').replace('−0%', '0%'), previousText };
+}

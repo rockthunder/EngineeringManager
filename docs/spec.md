@@ -68,7 +68,7 @@ With the default bar of High, this is identical to the original scheme (Elite bl
 
 ## Metric catalogue v1
 
-v1 grades 16 team metrics across four groups and shows one, throughput, as context only. Thresholds for the DORA metrics follow the last published DORA tiers. The others are starting points to tune once there are 4 to 6 weeks of real data. Anything worse than Medium is Low.
+v1 grades 17 team metrics across four groups and shows one, throughput, as context only. Thresholds for the DORA metrics follow the last published DORA tiers. The others are starting points to tune once there are 4 to 6 weeks of real data. Anything worse than Medium is Low.
 
 **Speed and flow**
 
@@ -84,6 +84,7 @@ v1 grades 16 team metrics across four groups and shows one, throughput, as conte
 | Ageing work in progress | Jira | % of in-progress items older than 14 days (lower) | < 10% | < 20% | < 35% | Pooled across all in-progress items | 5 items · end of window |
 | Plan predictability | Jira sprints | % of committed items completed (higher) | ≥ 85% | ≥ 70% | ≥ 50% | Total completed ÷ total committed | 2 sprints · 60 days |
 | Throughput | Jira | items done per week | not graded | not graded | not graded | Sum | none · 30 days |
+| Ticket bounce rate | Jira status transitions | % of done items that stepped backwards in the workflow (lower) | ≤ 5% | ≤ 10% | ≤ 20% | Bounced items ÷ all done items, pooled | 10 items · 30 days |
 
 **Stability and quality**
 
@@ -133,17 +134,17 @@ The app has 12 screens behind a login, reached from a left-hand nav grouped into
 | --- | --- | --- |
 | Team benchmark | Where is each team against the bar? | Grid of teams × metrics, coloured by distance from bar, with value, level and trend arrow. Org row at the foot. Filter by group or profile. Clicking a cell opens the team drill-down. |
 | Org benchmark | Is engineering as a whole moving towards the bar? | The org row on its own, plus a grid of metrics × months coloured the same way, and "teams at or above bar" per metric (a count, no names). |
-| Team drill-down | Where does this team's time go? | Every metric for one team with trend and bar line. Breakdowns: lead time by stage (coding, pickup, review, deploy), PR size distribution, cycle time scatter, investment mix. |
+| Team drill-down | Where does this team's time go? | A headline strip of the team's metrics colour coded against the bar with deltas, the team's plain stats (deploys, PRs merged, items done, in progress, incidents, bounced items) with change on the previous period, then every metric with trend and bar line. Breakdowns: lead time by stage (coding, pickup, review, deploy), time in each Jira status, where tickets bounce, what is in each column now, PR size distribution, cycle time scatter, investment mix. |
 
 **Audience views** (top down through the org)
 
 | Screen | Persona's question | Main content |
 | --- | --- | --- |
 | Eng MBR | How has engineering trended this month and quarter? | Org benchmark summary, 12-month trends for the five DORA metrics, new capability share and DevEx score, month on month and quarter on quarter. |
-| Director to Execs | Are we delivering faster and more safely, on the right work? | Six headline metrics (deploy frequency, lead time, change failure rate, recovery time, new capability share, DevEx score) with trend vs last quarter and teams at bar. |
+| Director to Execs | Are we delivering faster and more safely, on the right work? | A written summary, then six headline metrics as speed/stability pairs (deploy frequency with change failure rate, lead time with recovery time, new capability share with DevEx score). Each tile shows the value, the delta and what it was last quarter, a 12-month sparkline with the bar drawn on it, and unnamed team dots with "N of M teams at or above the bar" (and what it was). |
 | EM to Director | How are my teams doing against the bar? | Benchmark grid filtered to the EM's group, with each team's trend against its own baseline. |
-| EM to TL | Where can this team improve? | The team drill-down, framed as "furthest from bar" and "most improved". |
-| TL to Team | What is stuck right now? | Ageing work items, PRs waiting for review, PR sizes this week, sprint progress. Bar lines shown, no red or green grid. |
+| EM to TL | Where can this team improve? | The team's headline metrics and stats, then "furthest from bar" (or, if nothing is below it, what sits exactly at it) and "most improved", plus tickets that haven't moved. |
+| TL to Team | What is stuck right now? | The team's headline metrics colour coded against the bar, then plain lists with bar lines: what is in each column and what hasn't moved, ageing work items with time in current status, PRs waiting for review, PR sizes this week, sprint progress. |
 
 **Surveys, glossary and admin**
 
@@ -287,6 +288,15 @@ Both early decisions are made, so the build can start in Claude Code. The dummy 
 
 - **Stack.** TypeScript throughout, with a Fastify API and worker, a React UI, Postgres, and Docker Compose for local running.
 - **Survey minimum.** 4 responses, with teams below that shown only within their group.
+
+**Decided after reviewing the dummy app**
+
+- **Deltas everywhere they make sense.** Every cell shows how far it moved on the previous period and what it was ("−18%, was 3.9 days"); rates and scores show percentage points. This applies to the grid, the org by-month table (each month against the one before), teams-at-the-bar counts, the drill-down, the EM and exec views.
+- **Ticket bounce** is a graded metric: a move to an earlier workflow status (In Review back to In Progress, a QA rejection, a reopened item). Leaving an impediment status such as Blocked is not a bounce. The workflow order and impediment statuses are set in the source definitions.
+- **Time in status**: mean time per finished item in each status (so the bar adds up) and the typical time when an item does visit it; To Do is shown as queue time.
+- **Hasn't moved**: in-progress items that have sat in the same status for 5 or more days.
+- **TL to Team** now colour codes the team's headline metrics, which changes the earlier "no red or green" rule; the lists below stay neutral.
+- **Capitalisable work** is deferred.
 
 **Decided while building steps 1–3** (revisit if they don't suit)
 

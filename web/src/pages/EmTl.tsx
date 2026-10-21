@@ -4,6 +4,8 @@ import type { EmTlView, FocusItem } from '@contract';
 import { api } from '../api';
 import { TrendArrow } from '../components/Cell';
 import { InfoLink } from '../components/InfoLink';
+import { HeadlineStrip, StatTiles } from '../components/Headline';
+import { Legend } from '../components/Legend';
 import { Toolbar } from '../components/Toolbar';
 import { useColours } from '../components/useColours';
 import { useTeamParam } from '../components/useTeamParam';
@@ -55,12 +57,22 @@ export function EmTl() {
       {q.error && <p className="error" role="alert">{(q.error as Error).message}</p>}
       {!view && !q.error && <p className="muted">Loading…</p>}
       {view && (
+        <>
+          <h2>{view.team.name}: headline against the bar</h2>
+          <Legend colourMode={view.colourMode} />
+          <HeadlineStrip items={view.headline} to={(id) => `/teams/${view.team.id}${v.carry({ metric: id })}`} />
+          <StatTiles stats={view.insights.stats} windowDays={view.insights.windowDays} />
+        </>
+      )}
+      {view && (
         <div className="two-col">
           <section>
             <h2>Furthest from the bar</h2>
-            {view.furthestFromBar.length === 0 && <p className="muted">Nothing is below the bar in this window.</p>}
+            {view.furthestFromBar.length === 0 && (
+              <p className="muted">Nothing is below the bar in this window.{view.atTheBar.length > 0 && ' These are exactly at it, so any slip would show:'}</p>
+            )}
             <ul className="stack">
-              {view.furthestFromBar.map((i) => <Focus key={i.metricId} item={i} teamId={view.team.id} carry={v.carry({ metric: i.metricId })} />)}
+              {(view.furthestFromBar.length > 0 ? view.furthestFromBar : view.atTheBar).map((i) => <Focus key={i.metricId} item={i} teamId={view.team.id} carry={v.carry({ metric: i.metricId })} />)}
             </ul>
           </section>
           <section>
@@ -71,6 +83,22 @@ export function EmTl() {
             </ul>
           </section>
         </div>
+      )}
+      {view && (
+        <section className="card">
+          <h3>Hasn’t moved ({view.insights.inFlight.notMoved.length})</h3>
+          <p className="muted small">Tickets that have sat in the same status for {view.insights.inFlight.staleDays}+ days.</p>
+          {view.insights.inFlight.notMoved.length === 0 ? (
+            <p className="muted">Everything in progress has moved recently.</p>
+          ) : (
+            <ul className="notmoved">
+              {view.insights.inFlight.notMoved.slice(0, 5).map((n) => (
+                <li key={n.key}><strong>{n.key}</strong> <span className="muted">{n.type}</span> in <em>{n.status}</em> for {n.daysText}</li>
+              ))}
+            </ul>
+          )}
+          <Link to={`/views/tl-team?team=${view.team.id}`}>See what is in each column →</Link>
+        </section>
       )}
       {view && <p><Link to={`/teams/${view.team.id}${v.carry()}`}>Open the full drill-down for {view.team.name} →</Link></p>}
     </>

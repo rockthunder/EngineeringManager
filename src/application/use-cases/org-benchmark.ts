@@ -1,4 +1,6 @@
-import { instantToDay, lastNDays } from '../../domain/time/day';
+import { trendOf } from '../../domain/benchmarks/trend';
+import { REGISTRY } from '../../domain/metrics/registry';
+import { addDays, instantToDay, lastNDays } from '../../domain/time/day';
 import { resolveRange, type RangeInput } from '../range';
 import { loadSettings, rangeFor } from '../settings';
 import type { AtOrAbove, OrgBenchmarkView } from '../views/contract';
@@ -21,7 +23,8 @@ export function monthLabel(endDay: string, today: string): string {
 }
 
 /** Counts only: how many teams are at or above the bar per metric, never which ones. */
-export function teamsAtOrAbove(grid: BenchmarkGrid): AtOrAbove[] {
+export function teamsAtOrAbove(grid: BenchmarkGrid, previous?: BenchmarkGrid): AtOrAbove[] {
+  const before = previous ? teamsAtOrAbove(previous) : null;
   return grid.metrics
     .filter((m) => m.graded)
     .map((m) => {
@@ -33,6 +36,7 @@ export function teamsAtOrAbove(grid: BenchmarkGrid): AtOrAbove[] {
         atOrAbove,
         graded: graded.length,
         text: graded.length === 0 ? 'No team has enough data' : `${atOrAbove} of ${graded.length} teams at or above the bar`,
+        previousAtOrAbove: before?.find((x) => x.metricId === m.id)?.atOrAbove ?? null,
       };
     });
 }
@@ -55,16 +59,25 @@ export async function getOrgBenchmark(deps: ViewDeps, req: OrgBenchmarkRequest =
 
   const current = computeBenchmarkGrid(input, { endDay, compare: false, version, ...(windowDays === undefined ? {} : { windowDays }) });
   const monthly = computeMonthly(input, months, version);
+  const previous = windowDays === undefined ? undefined
+    : computeBenchmarkGrid(input, { endDay: addDays(endDay, -windowDays), compare: false, version, windowDays });
 
   return {
     ...pageContext(current, settings, asOf, range.range),
     metrics: current.metrics,
     org: { cells: current.org.cells.map((c) => cellView(c, settings)) },
-    atOrAbove: teamsAtOrAbove(current),
-    months: monthly.map((m) => ({
+    atOrAbove: teamsAtOrAbove(current, previous),
+    // Each month's cells carry the movement since the month before.
+    months: monthly.map((m, mi) => ({
       endDay: m.endDay,
       label: monthLabel(m.endDay, today),
-      cells: m.grid.org.cells.map((c) => cellView(c, settings)),
+      cells: m.grid.org.cells.map((c, i) => {
+        const before = monthly[mi - 1]?.grid.org.cells[i];
+        const trend = before
+          ? trendOf(REGISTRY[i]!, { value: c.gradedValue, sampleSize: c.sampleSize }, { value: before.gradedValue, sampleSize: before.sampleSize })
+          : null;
+        return cellView({ ...c, trend }, settings);
+      }),
     })),
     version,
   };

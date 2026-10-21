@@ -16,6 +16,7 @@ import { dataAsOf, pageContext } from '../views/page';
 import { computeBenchmarkGrid, loadGridInput } from './benchmark-grid';
 import { computeMonthly, monthEnds, monthlyRangeDays } from './monthly';
 import { monthLabel } from './org-benchmark';
+import { buildTeamInsights } from './team-insights';
 import type { ViewDeps } from './team-benchmark';
 
 export interface DrilldownRequest {
@@ -85,6 +86,9 @@ export async function getTeamDrilldown(deps: ViewDeps, req: DrilldownRequest): P
     focusMetric: req.metric ?? null,
     windowDays: days,
     metrics,
+    insights: buildTeamInsights({
+      input, teamId: team.id, endDay, windowDays: days, now: Math.min(deps.clock.now(), lastNDays(endDay, 1).to),
+    }),
     breakdowns: {
       leadTimeStages: leadTimeStages(ev, ctx).map((s) => ({
         stage: s.stage, label: STAGE_LABELS[s.stage], medianHours: s.medianHours, text: hoursText(s.medianHours), sampleSize: s.sampleSize,

@@ -5,7 +5,9 @@ import type { DrilldownView } from '@contract';
 import { api } from '../api';
 import { Histogram, MixBar, StageBar } from '../charts/Bars';
 import { LineChart } from '../charts/LineChart';
+import { BouncePanel, InFlightPanel, StatusTimeChart } from '../charts/Flow';
 import { Scatter } from '../charts/Scatter';
+import { HeadlineStrip, StatTiles } from '../components/Headline';
 import { TrendArrow } from '../components/Cell';
 import { InfoLink } from '../components/InfoLink';
 import { Legend } from '../components/Legend';
@@ -46,8 +48,27 @@ export function TeamDrilldown() {
       </header>
       <Toolbar context={view} params={v.params} onChange={v.set} showVersion />
 
+      <h2>Headline: {view.team.name} against the bar</h2>
+      <Legend colourMode={view.colourMode} />
+      <HeadlineStrip items={view.metrics.map((m) => ({ header: m.header, cell: m.cell }))} to={(id) => `/teams/${view.team.id}${v.carry({ metric: id })}`} />
+
+      <h2>The numbers</h2>
+      <StatTiles stats={view.insights.stats} windowDays={view.insights.windowDays} />
+
       <h2>Where does the time go? <span className="muted small">last {view.windowDays} days</span></h2>
       <div className="cards">
+        <section className="card wide">
+          <h3>Time in each status <InfoLink metricId="work_item_cycle_time" name="Work item cycle time" /></h3>
+          <StatusTimeChart rows={view.insights.statusTimes} />
+        </section>
+        <section className="card">
+          <h3>Where tickets bounce <InfoLink metricId="ticket_bounce_rate" name="Ticket bounce rate" /></h3>
+          <BouncePanel bounce={view.insights.bounce} />
+        </section>
+        <section className="card">
+          <h3>In each column right now</h3>
+          <InFlightPanel flight={view.insights.inFlight} teamLink={`/views/tl-team?team=${view.team.id}`} />
+        </section>
         <section className="card">
           <h3>Lead time by stage <InfoLink metricId="lead_time" name="Lead time for changes" /></h3>
           <StageBar stages={view.breakdowns.leadTimeStages} />

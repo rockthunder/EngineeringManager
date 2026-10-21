@@ -21,7 +21,7 @@ The API migrates and seeds the dummy world on first boot. To start over: `docker
 | Do this | See this |
 | --- | --- |
 | **Team benchmark** → hover a cell | The gap in words: "Lead time 3.2 days, High (1 level below the bar); bar is under 1 day (Elite)" |
-| Click a cell | The team drill-down at that metric: where lead time goes (coding, waiting for review, in review, waiting to deploy), PR sizes, cycle-time scatter, investment mix |
+| Click a cell | The team drill-down: the team's metrics colour coded with deltas, its plain stats, where lead time goes, **time in each Jira status**, **where tickets bounce**, what is in each column now and what hasn't moved, PR sizes, cycle time, investment mix |
 | Look at **Iris** | Grey "not enough data" with the count instead of a grade |
 | **Settings → Benchmarks and bars**: set a bar to Elite, **Publish** | A new immutable Bar version; cells recolour straight away with nothing re-fetched. Switch "Grade history against" to *today's bar* to see history regraded |
 | **Settings → Team mapping**: move `harbour-core` to Juniper from a date | Harbour keeps its earlier history, Juniper gets the later events. Archive a team: it leaves the grid but org totals and history stay |
@@ -29,7 +29,7 @@ The API migrates and seeds the dummy world on first boot. To start over: `docker
 | **Settings → Data sources**: change the production environment name | Every deploy metric recomputes immediately (metrics are computed from raw events on read) |
 | **Surveys**: create a campaign, **Open** it, open a team's link in a private window | The public page: no login, no team picker, no identity stored. Submit four answers for one team and its results appear; three and it stays hidden, rolled into its group |
 | **Org benchmark** | The pooled org row, 12 months of org cells, and "7 of 9 teams at or above the bar" (counts, never names) |
-| **Audience views** | The five views down the org: Eng MBR, Director to Execs, EM to Director, EM to TL, TL to Team (bar lines, no red/green) |
+| **Audience views** | The five views down the org. Director to Execs opens with a written summary and shows speed beside stability, each with a sparkline and the bar. EM to TL and TL to Team start with the team's colour-coded headline metrics |
 | **Glossary** | Every metric, generated from the same registry that computes it, opening with the principles |
 
 ## Dummy teams

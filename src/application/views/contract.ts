@@ -14,6 +14,10 @@ export interface TrendView {
   readonly text: string;
   /** (current − previous) ÷ |previous|, when finite. */
   readonly relativeChange: number | null;
+  /** Movement since the previous period, e.g. "−18%" or "+2.5 pts"; null when unknown. */
+  readonly deltaText: string | null;
+  /** What it was, e.g. "was 3.9 days". */
+  readonly previousText: string | null;
 }
 
 export interface CellView {
@@ -90,6 +94,8 @@ export interface AtOrAbove {
   readonly atOrAbove: number;
   readonly graded: number;
   readonly text: string;
+  /** The count in the previous period of the same length, for "was N". */
+  readonly previousAtOrAbove: number | null;
 }
 
 export interface OrgBenchmarkView extends PageContext {
@@ -124,6 +130,7 @@ export interface DrilldownView extends PageContext {
   readonly focusMetric: string | null;
   readonly windowDays: number;
   readonly metrics: readonly DrilldownMetric[];
+  readonly insights: TeamInsightsView;
   readonly breakdowns: {
     readonly leadTimeStages: readonly { stage: string; label: string; medianHours: number | null; text: string; sampleSize: number }[];
     readonly prSize: readonly { label: string; count: number }[];
@@ -183,9 +190,44 @@ export interface MbrView extends PageContext {
   readonly metrics: readonly MbrMetric[];
 }
 
-/** Director to Execs: six headline metrics, trend vs last quarter, teams at the bar. */
+export interface BandCounts {
+  readonly above: number;
+  readonly at: number;
+  readonly near: number;
+  readonly below: number;
+  readonly insufficient: number;
+}
+
+/** One headline measure for the execs: the org figure, how it moved, the bar, 12 months of trend, and team counts. */
+export interface ExecHeadline {
+  readonly metricId: string;
+  readonly name: string;
+  readonly cell: CellView;
+  /** A plain-English sentence about it. */
+  readonly sentence: string;
+  readonly atOrAbove: AtOrAbove | null;
+  /** How many teams sit in each band: counts only, never names. */
+  readonly teamBands: BandCounts;
+  readonly series: readonly SeriesPoint[];
+  readonly bar: { readonly level: string; readonly value: number; readonly text: string } | null;
+}
+
+export interface ExecPair {
+  readonly title: string;
+  readonly leftLabel: string;
+  readonly rightLabel: string;
+  readonly left: ExecHeadline;
+  readonly right: ExecHeadline;
+}
+
+/** Director to Execs: are we delivering faster and more safely, on the right work? */
 export interface ExecsView extends PageContext {
-  readonly headlines: readonly HeadlineView[];
+  readonly summary: {
+    readonly sentences: readonly string[];
+    readonly counts: { readonly graded: number; readonly atOrAbove: number; readonly improved: number; readonly worsened: number };
+  };
+  /** Speed beside stability, value beside sustainability: no metric stands alone. */
+  readonly pairs: readonly ExecPair[];
 }
 
 export interface TeamOption extends Option {
@@ -208,16 +250,22 @@ export interface EmTlView extends PageContext {
   readonly team: TeamOption;
   readonly teams: readonly TeamOption[];
   readonly furthestFromBar: readonly FocusItem[];
+  /** When nothing is below the bar: the metrics sitting exactly at it, so there is always something to look at. */
+  readonly atTheBar: readonly FocusItem[];
   readonly mostImproved: readonly FocusItem[];
+  readonly headline: readonly HeadlineItem[];
+  readonly insights: TeamInsightsView;
 }
 
 export interface TlTeamView extends PageContext {
   readonly team: TeamOption;
   readonly teams: readonly TeamOption[];
+  readonly headline: readonly HeadlineItem[];
+  readonly insights: TeamInsightsView;
   readonly ageing: {
     readonly thresholdDays: number;
     readonly bar: string;
-    readonly items: readonly { key: string; type: string; ageDays: number; status: string; aged: boolean }[];
+    readonly items: readonly { key: string; type: string; ageDays: number; status: string; aged: boolean; daysInStatus: number }[];
     readonly agedShare: number | null;
   };
   readonly waitingForReview: {
@@ -437,4 +485,57 @@ export interface PublicSurveyView {
   readonly alreadySubmitted: boolean;
   /** Plain statement of what is and isn't stored, shown on the page. */
   readonly privacyNote: string;
+}
+
+// ── Team insights (shared by drill-down, EM to TL and TL to Team) ──────────
+
+/** One of the team's metrics, as a headline chip: colour-coded against the bar, with the delta. */
+export interface HeadlineItem {
+  readonly header: MetricHeader;
+  readonly cell: CellView;
+}
+
+export interface StatView {
+  readonly key: string;
+  readonly label: string;
+  readonly current: number;
+  readonly previous: number;
+  /** e.g. "+3 (+20%)". */
+  readonly deltaText: string;
+  readonly previousText: string;
+  readonly direction: 'up' | 'down' | 'flat';
+}
+
+export interface StatusTimeView {
+  readonly status: string;
+  readonly statusClass: 'todo' | 'active' | 'waiting' | 'done';
+  readonly meanHours: number;
+  readonly meanText: string;
+  readonly medianText: string | null;
+  /** Share of finished items that were ever in this status (0–1). */
+  readonly visitedShare: number;
+}
+
+export interface BounceView {
+  readonly items: number;
+  readonly bouncedItems: number;
+  readonly rate: number | null;
+  readonly transitions: readonly { from: string; to: string; count: number }[];
+}
+
+export interface InFlightView {
+  /** In-progress items that have sat in their current status at least this long are listed as not moved. */
+  readonly staleDays: number;
+  readonly columns: readonly {
+    status: string; statusClass: 'todo' | 'active' | 'waiting' | 'done'; count: number; medianText: string | null; oldestText: string; oldestHours: number;
+  }[];
+  readonly notMoved: readonly { key: string; type: string; status: string; days: number; daysText: string }[];
+}
+
+export interface TeamInsightsView {
+  readonly windowDays: number;
+  readonly stats: readonly StatView[];
+  readonly statusTimes: readonly StatusTimeView[];
+  readonly bounce: BounceView;
+  readonly inFlight: InFlightView;
 }

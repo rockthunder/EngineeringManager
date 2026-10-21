@@ -42,3 +42,23 @@ describe('levelName', () => {
     expect(levelName('elite')).toBe('Elite');
   });
 });
+
+import { formatDelta } from './format';
+
+describe('formatDelta: how much it moved since the previous period', () => {
+  it('shows relative change for volumes, durations and sizes, and what it was', () => {
+    expect(formatDelta('hours', 77, 94)).toEqual({ text: '−18%', previousText: 'was 3.9 days' });
+    expect(formatDelta('per_week', 12, 10)).toEqual({ text: '+20%', previousText: 'was 10 per week' });
+    expect(formatDelta('lines', 59, 59)).toEqual({ text: '0%', previousText: 'was 59 lines' });
+  });
+
+  it('shows percentage points for rates and scores, which are already percentages', () => {
+    expect(formatDelta('percent', 15.7, 13.2)).toEqual({ text: '+2.5 pts', previousText: 'was 13.2%' });
+    expect(formatDelta('percent', 4, 6)).toEqual({ text: '−2 pts', previousText: 'was 6%' });
+    expect(formatDelta('score', 69, 66)).toEqual({ text: '+3', previousText: 'was 66' });
+  });
+
+  it('shows an absolute change when there was nothing before', () => {
+    expect(formatDelta('per_week', 3, 0)).toEqual({ text: '+3 per week', previousText: 'was 0 per week' });
+  });
+});

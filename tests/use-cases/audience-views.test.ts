@@ -40,16 +40,39 @@ describe('Eng MBR', () => {
 });
 
 describe('Director to Execs', () => {
-  it('has six headline metrics, each vs last quarter, with how many teams are at the bar (a count)', async () => {
+  it('has six headline measures in speed/stability pairs, each with its movement, bar and 12-month trend', async () => {
     const v = await get<ExecsView>('/api/views/director-execs');
-    expect(v.headlines.map((h) => h.metricId)).toEqual([
-      'deployment_frequency', 'lead_time', 'change_failure_rate', 'failed_deployment_recovery_time', 'new_capability_share', 'devex_score',
+    expect(v.pairs).toHaveLength(3);
+    expect(v.pairs.map((p) => [p.left.metricId, p.right.metricId])).toEqual([
+      ['deployment_frequency', 'change_failure_rate'], ['lead_time', 'failed_deployment_recovery_time'], ['new_capability_share', 'devex_score'],
     ]);
-    for (const h of v.headlines) {
+    expect(v.pairs.map((p) => [p.leftLabel, p.rightLabel])).toEqual([['Speed', 'Stability'], ['Speed', 'Stability'], ['Value', 'Sustainability']]);
+    for (const h of v.pairs.flatMap((p) => [p.left, p.right])) {
       expect(h.cell.trend, h.metricId).not.toBeNull();
+      expect(h.cell.trend!.deltaText, h.metricId).toBeTruthy();
+      expect(h.series, h.metricId).toHaveLength(12);
+      expect(h.bar, h.metricId).not.toBeNull();
       expect(h.atOrAbove!.text).toMatch(/^\d+ of \d+ teams at or above the bar$/);
+      expect(typeof h.atOrAbove!.previousAtOrAbove).toBe('number');
     }
-    expect(JSON.stringify(v)).not.toMatch(/Aurora|Delta|Harbour/);
+  });
+
+  it('counts teams in each band per metric without naming any', async () => {
+    const v = await get<ExecsView>('/api/views/director-execs');
+    for (const h of v.pairs.flatMap((p) => [p.left, p.right])) {
+      const b = h.teamBands;
+      expect(b.above + b.at + b.near + b.below + b.insufficient, h.metricId).toBe(10);
+      expect(b.above + b.at, h.metricId).toBe(h.atOrAbove!.atOrAbove);
+    }
+    expect(JSON.stringify(v)).not.toMatch(/Aurora|Delta|Harbour|Comet/);
+  });
+
+  it('opens with a plain-English summary that agrees with the figures', async () => {
+    const v = await get<ExecsView>('/api/views/director-execs');
+    expect(v.summary.sentences[0]).toMatch(/^\d of 6 headline measures are at or above the bar; \d improved on last quarter and \d got worse\.$/);
+    const above = v.pairs.flatMap((p) => [p.left, p.right]).filter((h) => (h.cell.distance ?? 0) >= 0).length;
+    expect(v.summary.counts.atOrAbove).toBe(above);
+    expect(v.pairs[0]!.left.sentence).toMatch(/^Deployment frequency is .+, and (at|above|\w+ levels? below) the bar\.$/);
   });
 });
 
@@ -104,10 +127,12 @@ describe('TL to Team', () => {
     expect(v.sprint!.daysLeft).toBeGreaterThanOrEqual(0);
   });
 
-  it('has no grades or colours at all: lists and bar lines only', async () => {
+  it('colour codes only the team’s headline metrics; the lists below are neutral lists against bar lines', async () => {
     const v = await get<TlTeamView>('/api/views/tl-team?team=birch');
-    const json = JSON.stringify(v);
-    expect(json).not.toMatch(/"colour"|"grade"|"band"/);
+    expect(v.headline).toHaveLength(18);
+    expect(v.headline.some((h) => h.cell.colour === 'green')).toBe(true);
+    const lists = JSON.stringify({ a: v.ageing, w: v.waitingForReview, p: v.prSizes, s: v.sprint });
+    expect(lists).not.toMatch(/"colour"|"grade"|"band"/);
   });
 
   it('item keys and PR ids carry no person: only keys, repos and numbers', async () => {

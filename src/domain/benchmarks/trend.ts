@@ -9,6 +9,8 @@ export interface Trend {
   readonly judgement: 'improving' | 'worsening' | 'steady' | 'not_judged' | 'unknown';
   /** (current − previous) ÷ |previous|; ±Infinity if previous was 0, null if unknown. */
   readonly relativeChange: number | null;
+  /** The previous period's value, for showing "was X". */
+  readonly previous: number | null;
 }
 
 interface Point {
@@ -19,15 +21,15 @@ interface Point {
 /** Compare against the previous period of the same length, honouring the direction of good. */
 export function trendOf(def: MetricDefinition, current: Point, previous: Point): Trend {
   const enough = (p: Point) => p.value !== null && p.sampleSize >= def.minSample.count;
-  if (!enough(current) || !enough(previous)) return { change: null, judgement: 'unknown', relativeChange: null };
+  if (!enough(current) || !enough(previous)) return { change: null, judgement: 'unknown', relativeChange: null, previous: null };
 
   const cur = current.value!;
   const prev = previous.value!;
   const rel = prev === 0 ? (cur === 0 ? 0 : cur > 0 ? Infinity : -Infinity) : (cur - prev) / Math.abs(prev);
   const change = Math.abs(rel) <= STEADY_BAND ? 'flat' : rel > 0 ? 'up' : 'down';
 
-  if (def.direction === 'neutral') return { change, judgement: 'not_judged', relativeChange: rel };
-  if (change === 'flat') return { change, judgement: 'steady', relativeChange: rel };
+  if (def.direction === 'neutral') return { change, judgement: 'not_judged', relativeChange: rel, previous: prev };
+  if (change === 'flat') return { change, judgement: 'steady', relativeChange: rel, previous: prev };
   const good = (change === 'up') === (def.direction === 'higher');
-  return { change, judgement: good ? 'improving' : 'worsening', relativeChange: rel };
+  return { change, judgement: good ? 'improving' : 'worsening', relativeChange: rel, previous: prev };
 }

@@ -26,6 +26,7 @@ export function Cell({ cell, to }: Props) {
     <>
       <span className="val">{cell.valueText}</span>
       <span className="det">{cell.detail}</span>
+      {cell.trend?.deltaText && <span className="delta" title={cell.trend.previousText ?? undefined}>{cell.trend.deltaText} <small>vs previous</small></span>}
       <TrendArrow trend={cell.trend} />
     </>
   );

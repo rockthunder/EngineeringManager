@@ -5,13 +5,12 @@ import type { MetricId } from '../../domain/metrics/types';
 import { startedAt, statusClassAt } from '../../domain/events/definitions';
 import { EMPTY_EVENTS } from '../../domain/events/types';
 import { attributeEvents } from '../../domain/teams/attribution';
-import { instantToDay, lastNDays, MS_PER_DAY, MS_PER_HOUR } from '../../domain/time/day';
+import { addDays, instantToDay, lastNDays, MS_PER_DAY, MS_PER_HOUR } from '../../domain/time/day';
 import { NotFoundError } from '../errors';
 import { loadSettings, rangeFor, type ScreenKey } from '../settings';
 import { resolveRange, type RangeInput } from '../range';
-import type {
-  EmDirectorView, EmTlView, ExecsView, FocusItem, HeadlineView, MbrView, TeamOption, TlTeamView,
-} from '../views/contract';
+import type { EmDirectorView, EmTlView, ExecHeadline, ExecsView, FocusItem, MbrView, TeamOption, TlTeamView } from '../views/contract';
+import { execSentence, execSummary } from '../views/exec-summary';
 import { barText, levelName } from '../views/format';
 import { cellView, trendView } from '../views/grid-view';
 import { dataAsOf, pageContext } from '../views/page';
@@ -19,6 +18,7 @@ import { computeBenchmarkGrid, loadGridInput, type BenchmarkGrid, type GridInput
 import { computeMonthly, monthEnds, monthlyRangeDays } from './monthly';
 import { monthLabel, teamsAtOrAbove } from './org-benchmark';
 import { getTeamBenchmark, type ViewDeps } from './team-benchmark';
+import { buildTeamInsights } from './team-insights';
 
 async function prepare(deps: ViewDeps, screen: ScreenKey, extraDays: number, range?: RangeInput) {
   const settings = await loadSettings(deps.settingsStore);
@@ -70,23 +70,50 @@ export async function getEngMbr(deps: ViewDeps, range?: RangeInput): Promise<Mbr
   };
 }
 
-const EXEC_METRICS: readonly MetricId[] = [
-  'deployment_frequency', 'lead_time', 'change_failure_rate', 'failed_deployment_recovery_time', 'new_capability_share', 'devex_score',
+const EXEC_PAIRS: readonly { title: string; leftLabel: string; rightLabel: string; left: MetricId; right: MetricId }[] = [
+  { title: 'How often we ship, and how often it breaks', leftLabel: 'Speed', rightLabel: 'Stability', left: 'deployment_frequency', right: 'change_failure_rate' },
+  { title: 'How fast changes reach users, and how fast we recover', leftLabel: 'Speed', rightLabel: 'Stability', left: 'lead_time', right: 'failed_deployment_recovery_time' },
+  { title: 'The work we choose, and how it feels to do', leftLabel: 'Value', rightLabel: 'Sustainability', left: 'new_capability_share', right: 'devex_score' },
 ];
 
-/** Director to Execs: are we delivering faster and more safely, on the right work? Six headlines vs last quarter. */
+/** Director to Execs: six headline measures in speed/stability pairs, with a written summary, trend and team counts. */
 export async function getDirectorExecs(deps: ViewDeps): Promise<ExecsView> {
-  const p = await prepare(deps, 'director-execs', 180);
+  const p = await prepare(deps, 'director-execs', 270);
   const grid = computeBenchmarkGrid(p.input, { windowDays: 90, compare: true });
-  const counts = teamsAtOrAbove(grid);
+  const before = computeBenchmarkGrid(p.input, { endDay: addDays(p.today, -90), windowDays: 90, compare: false });
+  const counts = teamsAtOrAbove(grid, before);
+  const monthly = computeMonthly(p.input, p.months);
+
+  const headline = (id: MetricId): ExecHeadline => {
+    const def = REGISTRY_BY_ID[id];
+    const idx = REGISTRY.findIndex((m) => m.id === id);
+    const raw = grid.org.cells[idx]!;
+    const cell = cellView(raw, p.settings);
+    const bands = { above: 0, at: 0, near: 0, below: 0, insufficient: 0 };
+    for (const r of grid.rows) {
+      const g = r.cells[idx]!.grade;
+      if (g.status === 'graded') bands[g.band]++;
+      else if (g.status === 'insufficient_data') bands.insufficient++;
+    }
+    return {
+      metricId: id, name: def.name, cell, sentence: execSentence(def.name, cell),
+      atOrAbove: counts.find((c) => c.metricId === id) ?? null, teamBands: bands,
+      series: monthly.map((m) => {
+        const c = cellView(m.grid.org.cells[idx]!, p.settings);
+        return { endDay: m.endDay, label: monthLabel(m.endDay, p.today), value: c.status === 'insufficient_data' ? null : c.value, colour: c.colour, text: c.valueText };
+      }),
+      bar: raw.thresholds && raw.bar !== 'low'
+        ? { level: levelName(raw.bar), value: raw.thresholds[raw.bar], text: barText(def, raw.thresholds, raw.bar) }
+        : null,
+    };
+  };
+
+  const pairs = EXEC_PAIRS.map((x) => ({ title: x.title, leftLabel: x.leftLabel, rightLabel: x.rightLabel, left: headline(x.left), right: headline(x.right) }));
+  const all = pairs.flatMap((x) => [x.left, x.right]);
   return {
     ...pageContext(grid, p.settings, p.asOf, '90'),
-    headlines: EXEC_METRICS.map((id): HeadlineView => ({
-      metricId: id,
-      name: REGISTRY_BY_ID[id].name,
-      cell: cellView(orgCell(grid, id), p.settings),
-      atOrAbove: counts.find((c) => c.metricId === id) ?? null,
-    })),
+    summary: execSummary(all.map((h) => ({ name: h.name, cell: h.cell, atOrAbove: h.atOrAbove }))),
+    pairs,
   };
 }
 
@@ -130,10 +157,16 @@ export async function getEmTl(
     };
   });
   const strip = ({ metricId, name, cell }: FocusItem): FocusItem => ({ metricId, name, cell });
+  const days = p.resolved.windowDays ?? 30;
   return {
     ...pageContext(grid, p.settings, p.asOf, p.range.range),
     team: teamOption(team),
     teams: teams.map(teamOption),
+    headline: row.cells.map((c, i) => ({ header: grid.metrics[i]!, cell: cellView(c, p.settings) })),
+    insights: buildTeamInsights({
+      input: p.input, teamId: team.id, endDay: p.resolved.endDay, windowDays: days, now: Math.min(deps.clock.now(), lastNDays(p.resolved.endDay, 1).to),
+    }),
+    atTheBar: items.filter((i) => i.distance === 0).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 3).map(strip),
     furthestFromBar: items.filter((i) => i.distance < 0).sort((a, b) => a.distance - b.distance || a.name.localeCompare(b.name)).slice(0, 3).map(strip),
     mostImproved: items.filter((i) => i.change >= 0).sort((a, b) => b.change - a.change).slice(0, 3).map(strip),
   };
@@ -162,7 +195,10 @@ export async function getTlTeam(deps: ViewDeps, req: { teamId?: string | null } 
     .map((w) => {
       const start = startedAt(w, definitions) ?? w.createdAt;
       const last = [...w.transitions].filter((t) => t.at < now).pop();
-      return { key: w.key, type: w.type, ageDays: (now - start) / MS_PER_DAY, status: last?.to ?? 'In Progress' };
+      return {
+        key: w.key, type: w.type, ageDays: (now - start) / MS_PER_DAY, status: last?.to ?? 'In Progress',
+        daysInStatus: last ? (now - last.at) / MS_PER_DAY : 0,
+      };
     })
     .sort((a, b) => b.ageDays - a.ageDays);
   const aged = inProgress.filter((i) => i.ageDays > AGEING_DAYS).length;
@@ -204,6 +240,8 @@ export async function getTlTeam(deps: ViewDeps, req: { teamId?: string | null } 
     ...pageContext(grid, p.settings, p.asOf, '30'),
     team: teamOption(team),
     teams: teams.map(teamOption),
+    headline: grid.rows.find((r) => r.teamId === team.id)!.cells.map((c, i) => ({ header: grid.metrics[i]!, cell: cellView(c, p.settings) })),
+    insights: buildTeamInsights({ input: p.input, teamId: team.id, endDay: p.today, windowDays: 30, now }),
     ageing: {
       thresholdDays: AGEING_DAYS,
       bar: bar('ageing_wip').text,

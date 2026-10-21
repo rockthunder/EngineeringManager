@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import type { TlTeamView } from '@contract';
 import { api } from '../api';
 import { BarRow } from '../components/BarRow';
+import { InFlightPanel } from '../charts/Flow';
+import { HeadlineStrip, StatTiles } from '../components/Headline';
 import { InfoLink } from '../components/InfoLink';
+import { Legend } from '../components/Legend';
 import { Toolbar } from '../components/Toolbar';
 import { useTeamParam } from '../components/useTeamParam';
 import { useViewParams } from '../useViewParams';
@@ -25,7 +28,7 @@ export function TlTeam() {
     <>
       <header className="page-head">
         <h1>TL to Team</h1>
-        <p className="lede">What is stuck right now? The dashed line on each chart is the bar. This view is for the team’s own conversation, so it shows no grades.</p>
+        <p className="lede">What is stuck right now? The team’s metrics are colour coded against the bar; below that, plain lists with the bar drawn as a dashed line.</p>
       </header>
       <Toolbar context={view} params={v.params} onChange={v.set} showRange={false} />
       <div className="filters">
@@ -40,7 +43,19 @@ export function TlTeam() {
       {q.error && <p className="error" role="alert">{(q.error as Error).message}</p>}
       {!view && !q.error && <p className="muted">Loading…</p>}
       {view && (
+        <>
+          <h2>{view.team.name}: headline against the bar</h2>
+          <Legend colourMode={view.colourMode} />
+          <HeadlineStrip items={view.headline} to={(id) => `/teams/${view.team.id}?metric=${id}`} />
+          <StatTiles stats={view.insights.stats} windowDays={view.insights.windowDays} />
+        </>
+      )}
+      {view && (
         <div className="cards">
+          <section className="card wide">
+            <h3>In each column right now, and what hasn’t moved</h3>
+            <InFlightPanel flight={view.insights.inFlight} />
+          </section>
           <section className="card">
             <h3>Ageing work in progress <InfoLink metricId="ageing_wip" name="Ageing work in progress" /></h3>
             <p className="muted small">
@@ -48,7 +63,7 @@ export function TlTeam() {
             </p>
             {view.ageing.items.length === 0 && <p className="muted">Nothing in progress.</p>}
             {view.ageing.items.slice(0, 12).map((i) => (
-              <BarRow key={i.key} label={i.key} sub={`${i.type} · ${i.status}`} value={i.ageDays} max={Math.max(30, ...view.ageing.items.map((x) => x.ageDays))}
+              <BarRow key={i.key} label={i.key} sub={`${i.type} · ${i.status} for ${days(i.daysInStatus)}`} value={i.ageDays} max={Math.max(30, ...view.ageing.items.map((x) => x.ageDays))}
                 barAt={view.ageing.thresholdDays} valueText={days(i.ageDays)} emphasis={i.aged} />
             ))}
             <p className="muted small">Dashed line: {view.ageing.thresholdDays} days.</p>

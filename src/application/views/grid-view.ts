@@ -4,7 +4,7 @@ import type { MetricId } from '../../domain/metrics/types';
 import type { GridCell } from '../use-cases/benchmark-grid';
 import type { AppSettings } from '../settings';
 import type { CellView, ColourKey, TrendView } from './contract';
-import { barText, formatValue, levelName } from './format';
+import { barText, formatDelta, formatValue, levelName } from './format';
 
 const BAND_COLOUR = { above: 'blue', at: 'green', near: 'amber', below: 'red' } as const;
 const BAND_LABEL = { above: 'Above bar', at: 'At bar', near: 'Near bar', below: 'Below bar' } as const;
@@ -20,7 +20,13 @@ export function trendView(c: GridCell): TrendView | null {
     : judgement === 'not_judged' ? `${move[0]!.toUpperCase()}${move.slice(1)} on the previous period (context only)`
     : judgement === 'steady' ? 'Steady on the previous period'
     : `${judgement === 'improving' ? 'Improving' : 'Worsening'}: ${move} on the previous period`;
-  return { arrow: change, judgement, text, relativeChange: relativeChange !== null && Number.isFinite(relativeChange) ? relativeChange : null };
+  const def = REGISTRY_BY_ID[c.metricId as MetricId];
+  const delta = c.trend.previous !== null && c.gradedValue !== null ? formatDelta(def.unit, c.gradedValue, c.trend.previous) : null;
+  return {
+    arrow: change, judgement, text,
+    relativeChange: relativeChange !== null && Number.isFinite(relativeChange) ? relativeChange : null,
+    deltaText: delta?.text ?? null, previousText: delta?.previousText ?? null,
+  };
 }
 
 /** Turn one grid cell into display-ready JSON: text, colour key, label and hover explanation. */

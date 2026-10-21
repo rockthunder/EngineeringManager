@@ -45,7 +45,7 @@ export function OrgBenchmark() {
                 <tr className="atabove">
                   {view.metrics.map((m) => {
                     const a = view.atOrAbove.find((x) => x.metricId === m.id);
-                    return <td key={m.id} className="small"><strong>{a ? `${a.atOrAbove} of ${a.graded}` : '–'}</strong>{a && <small className="block muted">teams at or above bar</small>}</td>;
+                    return <td key={m.id} className="small"><strong>{a ? `${a.atOrAbove} of ${a.graded}` : '–'}</strong>{a && <small className="block muted">teams at or above bar{a.previousAtOrAbove !== null ? ` (was ${a.previousAtOrAbove})` : ''}</small>}</td>;
                   })}
                 </tr>
               </tbody>

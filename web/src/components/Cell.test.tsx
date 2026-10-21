@@ -7,7 +7,7 @@ import { Cell } from './Cell';
 const base: CellView = {
   metricId: 'lead_time', valueText: '3.2 days', value: 77, levelName: 'High', colour: 'amber', detail: 'High · Near bar',
   label: 'Near bar', distance: -1, status: 'graded', sampleSize: 30, minSample: null,
-  trend: { arrow: 'down', judgement: 'improving', text: 'Improving: down 18% on the previous period', relativeChange: -0.18 },
+  trend: { arrow: 'down', judgement: 'improving', text: 'Improving: down 18% on the previous period', relativeChange: -0.18, deltaText: '−18%', previousText: 'was 3.9 days' },
   tooltip: 'Lead time for changes 3.2 days, High (1 level below the bar); bar is under 1 day (Elite)',
 };
 
@@ -48,9 +48,16 @@ describe('Cell', () => {
   it('shows neutral metrics’ movement without judging it', () => {
     renderCell({
       ...base, colour: 'none', status: 'not_graded', levelName: null, detail: 'Context only',
-      trend: { arrow: 'up', judgement: 'not_judged', text: 'Up 40% on the previous period (context only)', relativeChange: 0.4 },
+      trend: { arrow: 'up', judgement: 'not_judged', text: 'Up 40% on the previous period (context only)', relativeChange: 0.4, deltaText: '+40%', previousText: 'was 5 per week' },
     });
     expect(screen.getByRole('img', { name: /context only/ })).toHaveTextContent('↑');
+  });
+
+  it('shows how far it moved since the previous period, with what it was', () => {
+    renderCell(base);
+    const delta = screen.getByText('−18%');
+    expect(delta).toBeInTheDocument();
+    expect(delta.closest('.delta')).toHaveAttribute('title', 'was 3.9 days');
   });
 
   it('links to the drill-down when given a target', () => {

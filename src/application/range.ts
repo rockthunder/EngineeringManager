@@ -1,4 +1,5 @@
 import { daysBetween, type Day } from '../domain/time/day';
+import { ValidationError } from './errors';
 
 export type RangeKey = '7' | '14' | '30' | '90' | 'qtd' | 'metric' | 'custom';
 
@@ -14,7 +15,7 @@ export interface ResolvedRange {
   readonly windowDays?: number;
 }
 
-export class RangeError extends Error {}
+export class RangeError extends ValidationError {}
 
 /** Turn the time-range picker's choice into a window ending on `endDay`. */
 export function resolveRange(input: RangeInput, today: Day): ResolvedRange {

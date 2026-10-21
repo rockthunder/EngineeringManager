@@ -1,4 +1,5 @@
 import type { RangeKey } from './range';
+import { ValidationError } from './errors';
 import type { SettingsStore } from './ports/settings-store';
 
 export const SCREENS = [
@@ -31,7 +32,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   surveyMinResponses: 4,
 };
 
-export class SettingsError extends Error {}
+export class SettingsError extends ValidationError {}
 
 const KEY = 'app';
 

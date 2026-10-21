@@ -12,7 +12,7 @@ import { attributeEvents } from '../../domain/teams/attribution';
 import { coverageDays } from '../../domain/teams/mapping';
 import type { Organisation } from '../../domain/teams/organisation';
 import type { ProfileId } from '../../domain/teams/types';
-import { instantToDay, lastNDays, previousWindow, type Day } from '../../domain/time/day';
+import { instantToDay, lastNDays, previousWindow, type Day, type Window } from '../../domain/time/day';
 import type { Clock } from '../ports/clock';
 import type { ConfigStore } from '../ports/config-store';
 import type { EventStore } from '../ports/event-store';
@@ -138,24 +138,26 @@ export interface GridDeps {
   readonly clock: Clock;
 }
 
-/** Load raw events and config, then compute the grid on read. */
-export async function getBenchmarkGrid(deps: GridDeps, req: GridRequest = {}): Promise<BenchmarkGrid> {
-  const today = instantToDay(deps.clock.now());
-  const endDay = req.endDay ?? today;
+/** Load raw events (covering `window`) and config: everything computeBenchmarkGrid needs. */
+export async function loadGridInput(deps: GridDeps, window: Window): Promise<Omit<GridInput, 'today'>> {
   const [organisation, definitions, versions] = await Promise.all([
     deps.configStore.loadOrganisation(),
     deps.configStore.loadDefinitions(),
     deps.configStore.loadBenchmarkVersions(),
   ]);
-  const longest = Math.max(req.windowDays ?? 0, ...REGISTRY.map((m) => m.defaultWindowDays));
-  const from = lastNDays(endDay, longest * (req.compare === false ? 1 : 2)).from;
   const doneStatuses = Object.entries(definitions.statusClasses)
     .filter(([, c]) => c === 'done')
     .map(([s]) => s);
-  const events = await deps.eventStore.loadEvents({
-    window: { from, to: lastNDays(endDay, 1).to },
-    doneStatuses,
-  });
-  return computeBenchmarkGrid({ events, organisation, definitions, versions, today }, req);
+  const events = await deps.eventStore.loadEvents({ window, doneStatuses });
+  return { events, organisation, definitions, versions };
 }
 
+/** Load raw events and config, then compute the grid on read. */
+export async function getBenchmarkGrid(deps: GridDeps, req: GridRequest = {}): Promise<BenchmarkGrid> {
+  const today = instantToDay(deps.clock.now());
+  const endDay = req.endDay ?? today;
+  const longest = Math.max(req.windowDays ?? 0, ...REGISTRY.map((m) => m.defaultWindowDays));
+  const from = lastNDays(endDay, longest * (req.compare === false ? 1 : 2)).from;
+  const input = await loadGridInput(deps, { from, to: lastNDays(endDay, 1).to });
+  return computeBenchmarkGrid({ ...input, today }, req);
+}

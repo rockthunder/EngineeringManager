@@ -6,7 +6,7 @@ import {
   statusClassAt,
   type SourceDefinitions,
 } from '../events/definitions';
-import type { Deployment, EventSet, WorkItem } from '../events/types';
+import type { Deployment, EventSet, PullRequest, WorkItem } from '../events/types';
 import { dayToInstant, inWindow, MS_PER_DAY, MS_PER_HOUR } from '../time/day';
 import type { Measurement, MetricContext } from './types';
 
@@ -18,7 +18,7 @@ const prodDeploys = (ev: EventSet, ctx: MetricContext): Deployment[] =>
 const mergedInWindow = (ev: EventSet, ctx: MetricContext) =>
   ev.pullRequests.filter((p) => p.mergedAt !== null && inWindow(p.mergedAt, ctx.window));
 
-const doneInWindow = (ev: EventSet, ctx: MetricContext): WorkItem[] =>
+export const doneInWindow = (ev: EventSet, ctx: MetricContext): WorkItem[] =>
   ev.workItems.filter((w) => {
     const c = completedAt(w, ctx.definitions);
     return c !== null && inWindow(c, ctx.window);
@@ -30,14 +30,14 @@ const percent = (num: number, den: number, sampleSize = den): Measurement => ({
 });
 
 /** Production deploys of PRs, i.e. "changes", with the deployment that shipped them. */
-function shippedChanges(ev: EventSet, ctx: MetricContext) {
-  const out: { firstCommitAt: number; deployedAt: number }[] = [];
+export function shippedChanges(ev: EventSet, ctx: MetricContext) {
+  const out: { pr: PullRequest; firstCommitAt: number; deployedAt: number }[] = [];
   for (const p of ev.pullRequests) {
     if (p.deploymentId === null) continue;
     const dep = ctx.deploymentsById.get(p.deploymentId);
     if (!dep || dep.environment !== ctx.definitions.productionEnvironment) continue;
     if (!inWindow(dep.at, ctx.window)) continue;
-    out.push({ firstCommitAt: p.firstCommitAt, deployedAt: dep.at });
+    out.push({ pr: p, firstCommitAt: p.firstCommitAt, deployedAt: dep.at });
   }
   return out;
 }

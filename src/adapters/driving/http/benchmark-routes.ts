@@ -1,6 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import type { ViewDeps } from '../../../application/use-cases/team-benchmark';
 import { getTeamBenchmark } from '../../../application/use-cases/team-benchmark';
+import { getGlossary } from '../../../application/use-cases/glossary';
+import { getOrgBenchmark } from '../../../application/use-cases/org-benchmark';
+import { getTeamDrilldown } from '../../../application/use-cases/team-drilldown';
 import type { AppDeps } from './deps';
 import { flag, parseRange } from './query';
 
@@ -28,4 +31,24 @@ export function registerBenchmarkRoutes(app: FastifyInstance, deps: AppDeps): vo
       profileId: q['profile'] ?? null,
     });
   });
+
+  app.get<{ Querystring: Record<string, string | undefined> }>('/api/benchmark/org', async (req) => {
+    const range = parseRange(req.query);
+    return getOrgBenchmark(v, {
+      ...(range ? { range } : {}),
+      version: req.query['version'] === 'today' ? 'today' : 'in_force',
+    });
+  });
+
+  app.get<{ Params: { id: string }; Querystring: Record<string, string | undefined> }>('/api/teams/:id', async (req) => {
+    const range = parseRange(req.query);
+    return getTeamDrilldown(v, {
+      teamId: req.params.id,
+      ...(range ? { range } : {}),
+      version: req.query['version'] === 'today' ? 'today' : 'in_force',
+      metric: req.query['metric'] ?? null,
+    });
+  });
+
+  app.get('/api/glossary', async () => getGlossary());
 }

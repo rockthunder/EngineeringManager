@@ -81,3 +81,77 @@ export interface GridView extends PageContext {
 export interface Me {
   readonly user: { readonly id: number; readonly username: string; readonly role: 'admin' };
 }
+
+export interface AtOrAbove {
+  readonly metricId: string;
+  /** Teams at or above the bar: a count, never names. */
+  readonly atOrAbove: number;
+  readonly graded: number;
+  readonly text: string;
+}
+
+export interface OrgBenchmarkView extends PageContext {
+  readonly metrics: readonly MetricHeader[];
+  /** The whole organisation, pooled, for the selected window. */
+  readonly org: { readonly cells: readonly CellView[] };
+  readonly atOrAbove: readonly AtOrAbove[];
+  /** Oldest first; each metric over its own default window ending at the month end. */
+  readonly months: readonly { readonly endDay: string; readonly label: string; readonly cells: readonly CellView[] }[];
+  readonly version: 'in_force' | 'today';
+}
+
+export interface SeriesPoint {
+  readonly endDay: string;
+  readonly label: string;
+  readonly value: number | null;
+  readonly colour: ColourKey;
+  readonly text: string;
+}
+
+export interface DrilldownMetric {
+  readonly header: MetricHeader;
+  readonly cell: CellView;
+  readonly counterpart: { readonly id: string; readonly name: string } | null;
+  readonly series: readonly SeriesPoint[];
+  /** The bar as a line on the chart: its numeric threshold, and in words. */
+  readonly bar: { readonly level: string; readonly value: number; readonly text: string } | null;
+}
+
+export interface DrilldownView extends PageContext {
+  readonly team: { readonly id: string; readonly name: string; readonly profile: string; readonly groupId: string; readonly headcount: number; readonly archived: boolean };
+  readonly focusMetric: string | null;
+  readonly windowDays: number;
+  readonly metrics: readonly DrilldownMetric[];
+  readonly breakdowns: {
+    readonly leadTimeStages: readonly { stage: string; label: string; medianHours: number | null; text: string; sampleSize: number }[];
+    readonly prSize: readonly { label: string; count: number }[];
+    readonly cycleTime: readonly { day: string; days: number }[];
+    readonly investment: readonly { category: string; label: string; count: number; share: number }[];
+  };
+}
+
+export interface GlossaryEntry {
+  readonly id: string;
+  readonly name: string;
+  readonly group: string;
+  readonly graded: boolean;
+  readonly unitLabel: string;
+  readonly direction: string;
+  readonly source: string;
+  readonly definition: string;
+  readonly formula: string;
+  readonly highMeans: string;
+  readonly lowMeans: string;
+  readonly aggregation: { readonly text: string; readonly example: string };
+  readonly watchOuts: string;
+  readonly counterpart: { readonly id: string; readonly name: string } | null;
+  readonly minSample: string;
+  readonly defaultWindowDays: number;
+  readonly thresholds: { readonly elite: string; readonly high: string; readonly medium: string; readonly low: string } | null;
+}
+
+export interface GlossaryView {
+  readonly principles: readonly { readonly title: string; readonly text: string }[];
+  readonly aggregationRule: string;
+  readonly entries: readonly GlossaryEntry[];
+}

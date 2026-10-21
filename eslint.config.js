@@ -66,6 +66,16 @@ export default tseslint.config(
     },
   },
   {
+    // Tests may use the test runner; they still can't reach application or adapters (zones above).
+    files: ['src/domain/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ regex: '^(?!vitest$)[^./]', message: 'domain tests may import only vitest and relative paths' }] },
+      ],
+    },
+  },
+  {
     files: ['src/application/**/*.ts'],
     rules: {
       'no-restricted-syntax': [

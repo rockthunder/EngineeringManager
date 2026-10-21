@@ -4,6 +4,8 @@ import { getTeamBenchmark } from '../../../application/use-cases/team-benchmark'
 import { getGlossary } from '../../../application/use-cases/glossary';
 import { getOrgBenchmark } from '../../../application/use-cases/org-benchmark';
 import { getTeamDrilldown } from '../../../application/use-cases/team-drilldown';
+import { getDirectorExecs, getEmDirector, getEmTl, getEngMbr, getTlTeam } from '../../../application/use-cases/audience-views';
+import { NotFoundError } from '../../../application/errors';
 import type { AppDeps } from './deps';
 import { flag, parseRange } from './query';
 
@@ -51,4 +53,18 @@ export function registerBenchmarkRoutes(app: FastifyInstance, deps: AppDeps): vo
   });
 
   app.get('/api/glossary', async () => getGlossary());
+
+  app.get<{ Params: { name: string }; Querystring: Record<string, string | undefined> }>('/api/views/:name', async (req) => {
+    const q = req.query;
+    const range = parseRange(q);
+    const version = q['version'] === 'today' ? ('today' as const) : ('in_force' as const);
+    switch (req.params.name) {
+      case 'eng-mbr': return getEngMbr(v, range);
+      case 'director-execs': return getDirectorExecs(v);
+      case 'em-director': return getEmDirector(v, { groupId: q['group'] ?? null, ...(range ? { range } : {}), version });
+      case 'em-tl': return getEmTl(v, { teamId: q['team'] ?? null, ...(range ? { range } : {}), version });
+      case 'tl-team': return getTlTeam(v, { teamId: q['team'] ?? null });
+      default: throw new NotFoundError(`No view ${req.params.name}`);
+    }
+  });
 }

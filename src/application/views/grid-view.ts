@@ -10,7 +10,7 @@ const BAND_COLOUR = { above: 'blue', at: 'green', near: 'amber', below: 'red' } 
 const BAND_LABEL = { above: 'Above bar', at: 'At bar', near: 'Near bar', below: 'Below bar' } as const;
 const LEVEL_COLOUR: Record<Level, ColourKey> = { elite: 'blue', high: 'green', medium: 'amber', low: 'red' };
 
-function trendView(c: GridCell): TrendView | null {
+export function trendView(c: GridCell): TrendView | null {
   if (!c.trend) return null;
   const { change, judgement, relativeChange } = c.trend;
   const pct = relativeChange !== null && Number.isFinite(relativeChange) ? `${Math.abs(Math.round(relativeChange * 100))}%` : '';
@@ -20,7 +20,7 @@ function trendView(c: GridCell): TrendView | null {
     : judgement === 'not_judged' ? `${move[0]!.toUpperCase()}${move.slice(1)} on the previous period (context only)`
     : judgement === 'steady' ? 'Steady on the previous period'
     : `${judgement === 'improving' ? 'Improving' : 'Worsening'}: ${move} on the previous period`;
-  return { arrow: change, judgement, text };
+  return { arrow: change, judgement, text, relativeChange: relativeChange !== null && Number.isFinite(relativeChange) ? relativeChange : null };
 }
 
 /** Turn one grid cell into display-ready JSON: text, colour key, label and hover explanation. */

@@ -115,3 +115,19 @@ a.info { text-decoration: none; font-size: 12px; opacity: .7; } a.info:hover { o
 .entry { margin-top: 12px; scroll-margin-top: 12px; }
 .facts { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; margin: 0; } .facts dt { font-weight: 600; } .facts dd { margin: 0; }
 tr.atabove td { padding: 6px 9px; background: var(--surface); }
+
+.movement { list-style: none; padding: 0; margin: 6px 0 8px; display: grid; gap: 2px; font-size: 12px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.tile { background: color-mix(in srgb, var(--cell, transparent) 18%, var(--surface)); border: 1px solid var(--border); box-shadow: inset 5px 0 0 var(--cell, transparent); border-radius: 10px; padding: 14px 16px; }
+.tile h2 { font-size: 14px; margin: 0 0 6px; }
+.tile .big { font-size: 28px; font-weight: 800; line-height: 1.1; }
+.trend-line { margin: 8px 0 4px; font-size: 12px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+.stack { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.barrow { display: grid; grid-template-columns: 150px 1fr 80px; gap: 8px; align-items: center; margin: 5px 0; font-size: 12px; }
+.track { position: relative; height: 12px; background: color-mix(in srgb, var(--text) 8%, transparent); border-radius: 6px; }
+.fill { height: 100%; background: var(--muted); border-radius: 6px; opacity: .65; }
+.barrow.over .fill { opacity: 1; background: var(--text); }
+.barline { position: absolute; top: -3px; bottom: -3px; border-left: 2px dashed var(--text); }
+.barrow-val { text-align: right; font-variant-numeric: tabular-nums; }

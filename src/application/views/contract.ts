@@ -12,6 +12,8 @@ export interface TrendView {
   readonly judgement: 'improving' | 'worsening' | 'steady' | 'not_judged' | 'unknown';
   /** e.g. "Improving: down 18% on the previous period". */
   readonly text: string;
+  /** (current − previous) ÷ |previous|, when finite. */
+  readonly relativeChange: number | null;
 }
 
 export interface CellView {
@@ -154,4 +156,88 @@ export interface GlossaryView {
   readonly principles: readonly { readonly title: string; readonly text: string }[];
   readonly aggregationRule: string;
   readonly entries: readonly GlossaryEntry[];
+}
+
+/** One headline figure for a leadership view: the org cell plus how it moved. */
+export interface HeadlineView {
+  readonly metricId: string;
+  readonly name: string;
+  readonly cell: CellView;
+  readonly atOrAbove: AtOrAbove | null;
+}
+
+export interface MbrMetric {
+  readonly metricId: string;
+  readonly name: string;
+  readonly unitLabel: string;
+  readonly cell: CellView;
+  /** Org figure, last 30 days vs the 30 days before. */
+  readonly monthOnMonth: TrendView | null;
+  /** Org figure, last 90 days vs the 90 days before. */
+  readonly quarterOnQuarter: TrendView | null;
+  readonly series: readonly SeriesPoint[];
+}
+
+/** Eng MBR: how has engineering trended this month and quarter? */
+export interface MbrView extends PageContext {
+  readonly metrics: readonly MbrMetric[];
+}
+
+/** Director to Execs: six headline metrics, trend vs last quarter, teams at the bar. */
+export interface ExecsView extends PageContext {
+  readonly headlines: readonly HeadlineView[];
+}
+
+export interface TeamOption extends Option {
+  readonly groupId: string;
+}
+
+/** EM to Director: the grid filtered to one EM's group. */
+export interface EmDirectorView extends GridView {
+  readonly selectedGroup: string;
+}
+
+export interface FocusItem {
+  readonly metricId: string;
+  readonly name: string;
+  readonly cell: CellView;
+}
+
+/** EM to TL: where can this team improve? */
+export interface EmTlView extends PageContext {
+  readonly team: TeamOption;
+  readonly teams: readonly TeamOption[];
+  readonly furthestFromBar: readonly FocusItem[];
+  readonly mostImproved: readonly FocusItem[];
+}
+
+export interface TlTeamView extends PageContext {
+  readonly team: TeamOption;
+  readonly teams: readonly TeamOption[];
+  readonly ageing: {
+    readonly thresholdDays: number;
+    readonly bar: string;
+    readonly items: readonly { key: string; type: string; ageDays: number; status: string; aged: boolean }[];
+    readonly agedShare: number | null;
+  };
+  readonly waitingForReview: {
+    readonly bar: string;
+    readonly prs: readonly { id: string; repo: string; waitingHours: number; lines: number; overBar: boolean }[];
+    readonly pickupBarHours: number | null;
+  };
+  readonly prSizes: {
+    readonly bar: string;
+    readonly barLines: number | null;
+    readonly prs: readonly { id: string; repo: string; lines: number; day: string; overBar: boolean }[];
+  };
+  readonly sprint: {
+    readonly name: string;
+    readonly startDay: string;
+    readonly endDay: string;
+    readonly daysLeft: number;
+    readonly committed: number;
+    readonly completed: number;
+    readonly percentDone: number;
+    readonly expectedPercent: number;
+  } | null;
 }

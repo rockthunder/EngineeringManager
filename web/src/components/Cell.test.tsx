@@ -7,7 +7,7 @@ import { Cell } from './Cell';
 const base: CellView = {
   metricId: 'lead_time', valueText: '3.2 days', value: 77, levelName: 'High', colour: 'amber', detail: 'High · Near bar',
   label: 'Near bar', distance: -1, status: 'graded', sampleSize: 30, minSample: null,
-  trend: { arrow: 'down', judgement: 'improving', text: 'Improving: down 18% on the previous period' },
+  trend: { arrow: 'down', judgement: 'improving', text: 'Improving: down 18% on the previous period', relativeChange: -0.18 },
   tooltip: 'Lead time for changes 3.2 days, High (1 level below the bar); bar is under 1 day (Elite)',
 };
 
@@ -48,7 +48,7 @@ describe('Cell', () => {
   it('shows neutral metrics’ movement without judging it', () => {
     renderCell({
       ...base, colour: 'none', status: 'not_graded', levelName: null, detail: 'Context only',
-      trend: { arrow: 'up', judgement: 'not_judged', text: 'Up 40% on the previous period (context only)' },
+      trend: { arrow: 'up', judgement: 'not_judged', text: 'Up 40% on the previous period (context only)', relativeChange: 0.4 },
     });
     expect(screen.getByRole('img', { name: /context only/ })).toHaveTextContent('↑');
   });

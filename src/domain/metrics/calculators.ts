@@ -102,7 +102,7 @@ export const flowEfficiency = (ev: EventSet, ctx: MetricContext): Measurement =>
   return percent(num, den, items.length);
 };
 
-const AGEING_DAYS = 14;
+export const AGEING_DAYS = 14;
 
 export const ageingWip = (ev: EventSet, ctx: MetricContext): Measurement => {
   const at = ctx.window.to;

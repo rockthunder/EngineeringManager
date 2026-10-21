@@ -11,6 +11,8 @@ export const HISTORY_DAYS = 365;
 
 export const dummyDefinitions: SourceDefinitions = {
   productionEnvironment: 'production',
+  statusOrder: ['To Do', 'In Progress', 'Blocked', 'In Review', 'Waiting for QA', 'Done'],
+  impedimentStatuses: ['Blocked'],
   statusClasses: {
     'To Do': 'todo',
     'In Progress': 'active',
@@ -50,6 +52,7 @@ const base: Behaviour = {
   mix: { newCapability: 0.58, bug: 0.15, maintenance: 0.2, techDebt: 0.07 },
   bugFoundInProd: 0.3,
   unplannedShare: 0.12,
+  bounceRate: 0.06,
   survey: { mean: 3.8, responseRate: 0.85 },
 };
 
@@ -92,6 +95,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
   const juniper: Behaviour = {
     ...base,
     engineers: 5,
+    bounceRate: 0.03,
     cadence: { kind: 'weekdays', dows: [2, 4], hourUtc: 10 },
     itemsPerEngineerWeek: 0.9,
     survey: { mean: 3.9, responseRate: 0.85 },
@@ -106,8 +110,8 @@ export function dummyScenario(anchorDay: Day): Scenario {
         ...base, engineers: 7, prsPerEngineerWeek: 1.6, cadence: { kind: 'perMerge' },
         codingH: [4, 0.5], pickupH: [0.6, 0.7], reviewH: [4, 0.6], sizeLines: [55, 0.6], deployDelayH: [0.3, 0.5],
         changeFailureRate: 0.03, reworkRate: 0.03, recoveryH: [0.4, 0.6],
-        itemsPerEngineerWeek: 1.2, cycleDays: [2, 0.5], flowEfficiency: 0.5,
-        mix: { newCapability: 0.62, bug: 0.12, maintenance: 0.2, techDebt: 0.06 }, bugFoundInProd: 0.2, unplannedShare: 0.06,
+        itemsPerEngineerWeek: 1.2, cycleDays: [2, 0.5], flowEfficiency: 0.2,
+        mix: { newCapability: 0.58, bug: 0.2, maintenance: 0.17, techDebt: 0.05 }, bugFoundInProd: 0.8, unplannedShare: 0.24, bounceRate: 0.03,
         survey: { mean: 4.15, responseRate: 0.9 },
       },
     },
@@ -115,7 +119,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
       team: team('birch', 'Birch', 'product', 'north', 6),
       repos: ['birch-api', 'birch-app'],
       startDay: historyStart,
-      behaviour: { ...base, mix: { newCapability: 0.66, bug: 0.12, maintenance: 0.16, techDebt: 0.06 } },
+      behaviour: { ...base, bounceRate: 0.04, mix: { newCapability: 0.66, bug: 0.12, maintenance: 0.16, techDebt: 0.06 } },
     },
     {
       team: team('comet', 'Comet', 'product', 'north', 8),
@@ -126,7 +130,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
         codingH: [3, 0.5], pickupH: [0.5, 0.7], reviewH: [3, 0.6], sizeLines: [45, 0.6], deployDelayH: [0.2, 0.5],
         changeFailureRate: 0.28, rollbackShare: 0.4, reworkRate: 0.15, recoveryH: [4, 0.8],
         itemsPerEngineerWeek: 1.3, cycleDays: [2.5, 0.5], flowEfficiency: 0.45,
-        mix: { newCapability: 0.55, bug: 0.15, maintenance: 0.22, techDebt: 0.08 }, unplannedShare: 0.18,
+        mix: { newCapability: 0.55, bug: 0.15, maintenance: 0.22, techDebt: 0.08 }, unplannedShare: 0.18, bounceRate: 0.1,
         survey: { mean: 3.6, responseRate: 0.85 },
       },
     },
@@ -139,7 +143,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
         codingH: [400, 0.5], pickupH: [36, 0.6], reviewH: [216, 0.5], sizeLines: [650, 0.7], deployDelayH: [48, 0.4],
         changeFailureRate: 0.12, reworkRate: 0.1, recoveryH: [20, 0.8],
         itemsPerEngineerWeek: 0.8, cycleDays: [16, 0.6], flowEfficiency: 0.18,
-        mix: { newCapability: 0.35, bug: 0.2, maintenance: 0.3, techDebt: 0.15 }, bugFoundInProd: 0.5, unplannedShare: 0.28,
+        mix: { newCapability: 0.35, bug: 0.2, maintenance: 0.3, techDebt: 0.15 }, bugFoundInProd: 0.5, unplannedShare: 0.28, bounceRate: 0.3,
         survey: { mean: 3.0, responseRate: 0.75 },
       },
     },
@@ -152,7 +156,7 @@ export function dummyScenario(anchorDay: Day): Scenario {
         codingH: [6, 0.5], pickupH: [1.5, 0.6], reviewH: [8, 0.6], sizeLines: [130, 0.6], deployDelayH: [4, 0.5],
         changeFailureRate: 0.04, reworkRate: 0.04, recoveryH: [0.5, 0.6], backgroundIncidentsPerMonth: 4,
         itemsPerEngineerWeek: 0.9, cycleDays: [4, 0.5], flowEfficiency: 0.35,
-        mix: { newCapability: 0.52, bug: 0.12, maintenance: 0.28, techDebt: 0.08 }, bugFoundInProd: 0.2, unplannedShare: 0.1,
+        mix: { newCapability: 0.52, bug: 0.12, maintenance: 0.28, techDebt: 0.08 }, bugFoundInProd: 0.2, unplannedShare: 0.1, bounceRate: 0.05,
         survey: { mean: 3.9, responseRate: 0.9 },
       },
     },

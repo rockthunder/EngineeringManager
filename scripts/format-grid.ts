@@ -29,9 +29,9 @@ export function formatCell(c: GridCell): string {
 }
 
 const GROUPS: [string, number, number][] = [
-  ['Speed and flow', 0, 10],
-  ['Stability and quality', 10, 14],
-  ['Investment and developer experience', 14, 17],
+  ['Speed and flow', 0, 11],
+  ['Stability and quality', 11, 15],
+  ['Investment and developer experience', 15, 18],
 ];
 
 /** Markdown tables: teams × metrics, each cell "value LEVEL±distance trend". Rows are by name, never rank. */

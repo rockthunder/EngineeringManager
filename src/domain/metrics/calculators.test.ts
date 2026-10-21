@@ -155,6 +155,24 @@ describe('work item metrics', () => {
   });
 });
 
+describe('ticket_bounce_rate', () => {
+  it('is the % of items done in the window that stepped backwards at least once', () => {
+    const done = (steps: [string, number][]) => item([['In Progress', 0], ...steps], { createdAt: T0 + d(1) });
+    const ev = events({
+      workItems: [
+        done([['In Review', h(2)], ['Done', h(5)]]),
+        done([['In Review', h(2)], ['In Progress', h(3)], ['In Review', h(4)], ['Done', h(6)]]), // bounced
+        done([['Blocked', h(1)], ['In Progress', h(3)], ['In Review', h(4)], ['Done', h(6)]]), // unblocked: not a bounce
+        done([['In Review', h(2)], ['Waiting for QA', h(3)], ['In Progress', h(4)], ['Done', h(7)]]), // QA rejection
+        item([['In Progress', 0], ['In Review', h(1)], ['In Progress', h(2)]], { createdAt: T0 + d(1) }), // not done: ignored
+      ],
+    });
+    const r = run('ticket_bounce_rate', ev);
+    expect(r.value).toBe(50);
+    expect(r.sampleSize).toBe(4);
+  });
+});
+
 describe('plan_predictability', () => {
   it('is completed ÷ committed across sprints ending in window; completions outside the commitment do not count', () => {
     const a = sprint({ committedItemIds: ['1', '2', '3', '4'], completedItemIds: ['1', '2', '3', '9'], endAt: T0 + d(10) });

@@ -1,4 +1,5 @@
 import {
+  bouncesOf,
   completedAt,
   investmentCategory,
   startedAt,
@@ -202,4 +203,10 @@ export const devexScore = (ev: EventSet, ctx: MetricContext): Measurement => {
     .filter((r) => r.campaignId === latest && r.scoreAnswers.length > 0)
     .map((r) => ((r.scoreAnswers.reduce((a, b) => a + b, 0) / r.scoreAnswers.length - 1) / 4) * 100);
   return { kind: 'mean', sum: scores.reduce((a, b) => a + b, 0), count: scores.length, sampleSize: scores.length };
+};
+
+/** % of items done in the window that stepped backwards in the workflow at least once. */
+export const ticketBounceRate = (ev: EventSet, ctx: MetricContext): Measurement => {
+  const done = doneInWindow(ev, ctx);
+  return percent(done.filter((w) => bouncesOf(w, ctx.definitions).length > 0).length, done.length);
 };

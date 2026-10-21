@@ -200,6 +200,17 @@ function generateBoard(cfg: WorldConfig, board: BoardPlan): BoardOutput {
         ['In Review', 0.3 * active],
         ['Waiting for QA', (1 - u) * waiting],
       ];
+      // Some items are sent back: from review (In Review → In Progress) or after a QA rejection.
+      const pBounce = Math.min(0.6, b.bounceRate * (b.driftsFailureRate ? speed : 1));
+      if (r.chance(pBounce)) {
+        const loops = r.chance(0.25) ? 2 : 1;
+        const rework = (): [string, number][] => [['In Progress', 0.2 * active], ['In Review', 0.1 * active]];
+        if (r.chance(0.6)) {
+          steps.splice(4, 0, ...Array.from({ length: loops }, rework).flat());
+        } else {
+          for (let k = 0; k < loops; k++) steps.push(...rework(), ['Waiting for QA', 0.25 * waiting]);
+        }
+      }
       const transitions: StatusTransition[] = [{ from: null, to: 'To Do', at: createdAt }];
       let t = startAt;
       let prev = 'To Do';

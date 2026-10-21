@@ -27,7 +27,7 @@ describe('team benchmark view (display-ready JSON)', () => {
     expect(view).toMatchObject({ endDay: '2026-10-21', benchmarkVersion: 2, benchmarkEffectiveFrom: '2026-07-21', range: '30' });
     expect(view.dataAsOf).toMatch(/^2026-10-21T/);
     expect(view.rows).toHaveLength(10);
-    expect(view.metrics).toHaveLength(17);
+    expect(view.metrics).toHaveLength(18);
   });
 
   it('explains each grade in words: hover text names the gap and the bar', () => {

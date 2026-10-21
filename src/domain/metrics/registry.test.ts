@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { REGISTRY, REGISTRY_BY_ID } from './registry';
 
 describe('metric registry', () => {
-  it('has 17 metrics: 16 graded plus throughput', () => {
-    expect(REGISTRY).toHaveLength(17);
-    expect(new Set(REGISTRY.map((m) => m.id)).size).toBe(17);
-    expect(REGISTRY.filter((m) => m.graded)).toHaveLength(16);
+  it('has 18 metrics: 17 graded plus throughput', () => {
+    expect(REGISTRY).toHaveLength(18);
+    expect(new Set(REGISTRY.map((m) => m.id)).size).toBe(18);
+    expect(REGISTRY.filter((m) => m.graded)).toHaveLength(17);
     expect(REGISTRY.filter((m) => !m.graded).map((m) => m.id)).toEqual(['throughput']);
   });
 
   it('groups the catalogue as in the spec', () => {
     const count = (g: string) => REGISTRY.filter((m) => m.group === g).length;
-    expect(count('speed_flow')).toBe(10);
+    expect(count('speed_flow')).toBe(11);
     expect(count('stability_quality')).toBe(4);
     expect(count('investment')).toBe(2);
     expect(count('developer_experience')).toBe(1);

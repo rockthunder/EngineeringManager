@@ -27,11 +27,11 @@ describe('org benchmark', () => {
   });
 
   it('shows the whole-org row and twelve months of org cells, current month to date', () => {
-    expect(org.org.cells).toHaveLength(17);
+    expect(org.org.cells).toHaveLength(18);
     expect(org.months).toHaveLength(12);
     expect(org.months[0]!.label).toBe('Nov 2025');
     expect(org.months[11]!.label).toBe('Oct 2026 (to date)');
-    for (const m of org.months) expect(m.cells).toHaveLength(17);
+    for (const m of org.months) expect(m.cells).toHaveLength(18);
   });
 
   it('counts teams at or above the bar per metric, with no team names anywhere', async () => {
@@ -67,7 +67,7 @@ describe('team drill-down', () => {
     const d = await drill('birch', 'lead_time');
     expect(d.team).toMatchObject({ name: 'Birch', profile: 'product', headcount: 6 });
     expect(d.focusMetric).toBe('lead_time');
-    expect(d.metrics).toHaveLength(17);
+    expect(d.metrics).toHaveLength(18);
     const lt = d.metrics.find((m) => m.header.id === 'lead_time')!;
     expect(lt.series).toHaveLength(12);
     expect(lt.bar).toEqual({ level: 'Elite', value: 24, text: 'under 1 day' });
@@ -118,7 +118,7 @@ describe('glossary', () => {
 
   it('has an entry for every registered metric and nothing else (generated from the registry)', () => {
     expect(g.entries.map((e) => e.id).sort()).toEqual(REGISTRY.map((m) => m.id).sort());
-    expect(getGlossary().entries).toHaveLength(17);
+    expect(getGlossary().entries).toHaveLength(18);
   });
 
   it('states thresholds in words, the aggregation rule with an example, and the counterpart', () => {

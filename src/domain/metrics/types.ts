@@ -13,6 +13,7 @@ export type MetricId =
   | 'ageing_wip'
   | 'plan_predictability'
   | 'throughput'
+  | 'ticket_bounce_rate'
   | 'change_failure_rate'
   | 'failed_deployment_recovery_time'
   | 'deployment_rework_rate'

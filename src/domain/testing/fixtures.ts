@@ -18,6 +18,8 @@ export const d = (n: number) => n * MS_PER_DAY;
 
 export const DEFS: SourceDefinitions = {
   productionEnvironment: 'production',
+  statusOrder: ['To Do', 'In Progress', 'Blocked', 'In Review', 'Waiting for QA', 'Done'],
+  impedimentStatuses: ['Blocked'],
   statusClasses: {
     'To Do': 'todo',
     'In Progress': 'active',

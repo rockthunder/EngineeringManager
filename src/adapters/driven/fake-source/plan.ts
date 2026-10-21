@@ -30,6 +30,8 @@ export interface Behaviour {
   /** Share of bugs that were found in production. */
   readonly bugFoundInProd: number;
   readonly unplannedShare: number;
+  /** Chance a work item is sent back at least once (review or QA rejection). */
+  readonly bounceRate: number;
   readonly survey: { readonly mean: number; readonly responseRate: number; readonly fixedResponses?: number };
   /** Multiplies durations (and, softened, PR size and failure rate). 1 = steady. */
   readonly drift?: (day: Day) => number;

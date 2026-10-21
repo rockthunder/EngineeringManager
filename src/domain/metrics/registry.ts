@@ -183,6 +183,23 @@ export const REGISTRY: readonly MetricDefinition[] = [
     },
     measure: c.throughput,
   },
+  {
+    id: 'ticket_bounce_rate', name: 'Ticket bounce rate', group: 'speed_flow', graded: true,
+    unit: 'percent', unitLabel: '% of done items that bounced', direction: 'lower', comparator: 'lte',
+    defaultThresholds: { elite: 5, high: 10, medium: 20 },
+    aggregation: { rule: 'pooled_ratio', text: 'Items that bounced ÷ all items done, across the organisation, pooled.' },
+    minSample: { count: 10, noun: 'items' }, defaultWindowDays: 30, counterpart: 'work_item_cycle_time',
+    glossary: {
+      definition: 'How often finished work stepped backwards on its way through the workflow: sent back from review or QA, or reopened after Done.',
+      formula: 'Items done in the window with at least one move to an earlier workflow status ÷ all items done in the window. Leaving a Blocked status is not a bounce.',
+      source: 'Jira status transitions, using the workflow order and impediment statuses set in Settings.',
+      highMeans: 'Work is routinely sent back: unclear requirements, late review feedback or rework after QA. Each bounce costs another round of waiting.',
+      lowMeans: 'Work tends to go through the workflow once, in order.',
+      aggregationExample: 'Team A bounces 1 of 4 items and team B 10 of 96: org is 11 of 100 = 11 %, not the 17.5 % average of 25 % and 10.4 %.',
+      watchOuts: 'Some feedback is healthy; look for a persistent pattern and for where it happens (the drill-down shows which step they bounce between). Depends on the workflow order being configured correctly.',
+    },
+    measure: c.ticketBounceRate,
+  },
   // ───────────── Stability and quality ─────────────
   {
     id: 'change_failure_rate', name: 'Change failure rate', group: 'stability_quality', graded: true,

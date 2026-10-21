@@ -41,9 +41,9 @@ describe('journey: the Director opens the team benchmark for the last 30 days', 
     expect(grid.rows.map((r) => r.teamName)).toEqual([
       'Aurora', 'Birch', 'Comet', 'Delta', 'Ember', 'Fjord', 'Garnet', 'Harbour', 'Iris', 'Juniper',
     ]);
-    expect(grid.metrics).toHaveLength(17);
-    expect(grid.org.cells).toHaveLength(17);
-    for (const r of grid.rows) expect(r.cells).toHaveLength(17);
+    expect(grid.metrics).toHaveLength(18);
+    expect(grid.org.cells).toHaveLength(18);
+    for (const r of grid.rows) expect(r.cells).toHaveLength(18);
   });
 
   it('is not a league table: no rank, score or total anywhere, and order ignores grades', () => {
@@ -76,10 +76,11 @@ describe('journey: the Director opens the team benchmark for the last 30 days', 
 });
 
 describe('the dummy teams behave as described', () => {
-  it('Aurora is above or at the bar everywhere it is graded (blue cells)', () => {
+  it('Aurora is above the bar on most metrics (blue), with a couple one level short so there is always something to talk about', () => {
     expect(bandCount('Aurora', 'above')).toBeGreaterThanOrEqual(8);
     expect(bandCount('Aurora', 'below')).toBe(0);
-    expect(bandCount('Aurora', 'near')).toBe(0);
+    expect(bandCount('Aurora', 'near')).toBeGreaterThanOrEqual(1);
+    expect(bandCount('Aurora', 'near')).toBeLessThanOrEqual(3);
   });
 
   it('Birch is steady at the bar (green cells)', () => {

@@ -4,8 +4,23 @@ import type { Pool } from './pool';
 
 const LOCK_ID = 7_265_001;
 
+/** A fresh Postgres container restarts once during init; retry until it accepts connections. */
+export async function waitForPostgres(pool: Pool, timeoutMs = 30_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    try {
+      await pool.query('SELECT 1');
+      return;
+    } catch (e) {
+      if (Date.now() > deadline) throw e;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+}
+
 /** Apply any migrations/*.sql not yet recorded, in filename order, each in its own transaction. */
 export async function migrate(pool: Pool, dir = path.resolve('migrations')): Promise<string[]> {
+  await waitForPostgres(pool);
   const client = await pool.connect();
   const applied: string[] = [];
   try {

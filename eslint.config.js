@@ -9,7 +9,7 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
  * and has no ambient time or randomness (time arrives through the Clock port).
  */
 export default tseslint.config(
-  { ignores: ['node_modules', 'dist', 'web', 'coverage'] },
+  { ignores: ['node_modules', 'dist', 'web/dist', 'coverage'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -29,6 +29,12 @@ export default tseslint.config(
             { target: './src/domain', from: './web', message: 'domain must not import web' },
             { target: './src/application', from: './src/adapters', message: 'application must not import adapters' },
             { target: './src/application', from: './web', message: 'application must not import web' },
+            {
+              target: './web',
+              from: './src',
+              except: ['./application/views/contract.ts'],
+              message: 'web talks to the API only: it may import just the contract types',
+            },
           ],
         },
       ],

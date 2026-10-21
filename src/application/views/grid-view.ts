@@ -33,14 +33,14 @@ export function cellView(c: GridCell, settings: Pick<AppSettings, 'colourMode'>)
   if (g.status === 'insufficient_data') {
     return {
       ...base, valueText: 'Not enough data', levelName: null, colour: 'grey', label: 'Not enough data', distance: null,
-      status: 'insufficient_data', minSample: g.minSample,
+      detail: `${g.sampleSize} of ${g.minSample} ${def.minSample.noun}`, status: 'insufficient_data', minSample: g.minSample,
       tooltip: `${def.name}: not enough data (${g.sampleSize} of ${g.minSample} ${def.minSample.noun} needed)`,
     };
   }
   if (g.status === 'not_graded' || c.value === null) {
     const text = c.value === null ? '–' : formatValue(def.unit, c.value);
     return {
-      ...base, valueText: text, levelName: null, colour: 'none', label: 'Context only', distance: null,
+      ...base, valueText: text, levelName: null, colour: 'none', label: 'Context only', detail: 'Context only', distance: null,
       status: 'not_graded', minSample: null, tooltip: `${def.name} ${text} (shown for context, not graded)`,
     };
   }
@@ -53,6 +53,7 @@ export function cellView(c: GridCell, settings: Pick<AppSettings, 'colourMode'>)
     ...base, valueText: text, levelName: levelName(g.level), distance: g.distance, status: 'graded', minSample: null,
     colour: byLevel ? LEVEL_COLOUR[g.level] : BAND_COLOUR[g.band],
     label: byLevel ? levelName(g.level) : BAND_LABEL[g.band],
+    detail: byLevel ? levelName(g.level) : `${levelName(g.level)} · ${BAND_LABEL[g.band]}`,
     tooltip: `${def.name} ${text}, ${levelName(g.level)} (${gap}); bar is ${bar} (${levelName(g.bar)})`,
   };
 }

@@ -24,6 +24,8 @@ export interface CellView {
   readonly colour: ColourKey;
   /** Text shown with the colour so it works for colour-blind readers, e.g. "Near bar". */
   readonly label: string;
+  /** Second line of the cell, e.g. "High · Near bar" or "7 of 10 PRs". */
+  readonly detail: string;
   readonly distance: number | null;
   readonly status: 'graded' | 'insufficient_data' | 'not_graded';
   readonly sampleSize: number;

@@ -45,6 +45,19 @@ describe('dependency-direction lint rules', () => {
     expect(msgs.filter((m) => /Clock|PRNG/.test(m))).toHaveLength(3);
   });
 
+  it('rejects web importing anything from src except the contract', async () => {
+    const bad = await lint(
+      "import { REGISTRY } from '../../src/domain/metrics/registry';\nexport const r = REGISTRY;\n",
+      'web/src/bad.ts',
+    );
+    expect(bad.join('\n')).toMatch(/web talks to the API only/);
+    const ok = await lint(
+      "import type { GridView } from '../../src/application/views/contract';\nexport type G = GridView;\n",
+      'web/src/ok.ts',
+    );
+    expect(ok.filter((m) => /web talks to the API only/.test(m))).toEqual([]);
+  });
+
   it('allows adapters to import application and domain', async () => {
     const msgs = await lint(
       "import type { Day } from '../../../domain/time/day';\nexport type D = Day;\n",

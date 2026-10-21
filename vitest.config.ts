@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     projects: [
+      'web/vitest.config.ts',
       {
         test: {
           name: 'unit',
